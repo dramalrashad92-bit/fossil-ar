@@ -25,6 +25,8 @@ if(F[k]){
   const glb=base+'models/'+k+'.glb';
   const sv='https://arvr.google.com/scene-viewer/1.0?file='+encodeURIComponent(glb)+'&mode=ar_preferred&title='+encodeURIComponent(F[k]);
   const intent='intent://arvr.google.com/scene-viewer/1.0?file='+encodeURIComponent(glb)+'&mode=ar_preferred&title='+encodeURIComponent(F[k])+'#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url='+encodeURIComponent(location.href.split('#')[0]+'#noar')+';end;';
+  const here=location.href.split('#')[0];
+  const chromeI='intent://'+here.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;action=android.intent.action.VIEW;S.browser_fallback_url='+encodeURIComponent('googlechrome://navigate?url='+here)+';end;';
   const isAnd=/Android/i.test(navigator.userAgent);
   document.title=F[k]+' · AR';
   app.innerHTML=`<header><h1>${IC[k]} ${F[k]}</h1><p>Fossil Evidence Museum</p></header>
@@ -32,10 +34,11 @@ if(F[k]){
    <span slot="ar-button"></span>
   </model-viewer>
   <button class="btn" id="arGo">📱 See it on your desk</button>
-  ${isAnd?`<div><a class="btn" style="background:#6b4a2b;font-size:15px;padding:10px 18px" href="${intent}">Not working? Try way 2</a></div>`:''}
+  ${isAnd?`<div><a class="btn" style="background:#6b4a2b;font-size:15px;padding:10px 18px" href="${chromeI}" id="w2">Not working? Open in Chrome</a></div>`:''}
   <p id="dbg" style="display:none"></p><p class="small" id="msg">Point the camera at your desk or the floor and move the phone slowly until the fossil appears.</p>
   <div id="help" style="display:none;background:#5a1f12;margin:10px;padding:12px;border-radius:12px;font-size:15px">⚠️ AR could not start on this phone.<br>1) Install or update <b>Google Play Services for AR</b>:<br><a class="btn" style="font-size:15px;padding:10px 18px" href="https://play.google.com/store/apps/details?id=com.google.ar.core">Open Play Store</a><br>2) Open this page in <b>Chrome</b> (not inside another app) and try again.</div>
   <div><a class="btn" style="background:#1f4e79;font-size:15px;padding:10px 18px" href="holo.html?k=${k}">🔺 Hologram mode</a></div><a href="./" style="color:#f1d3a7">⬅ All fossils</a><div style="height:20px"></div>`;
+  const w2=document.getElementById('w2');if(w2)w2.addEventListener('click',()=>setTimeout(()=>{if(!document.hidden)location.href='googlechrome://navigate?url='+encodeURIComponent(here)},1500));
   const mv=document.getElementById('mv'),help=()=>document.getElementById('help').style.display='block';
   const dbg=t=>{document.getElementById('dbg').textContent+=t+' · '};
   let st='';
