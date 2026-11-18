@@ -18,21 +18,27 @@ model-viewer{width:100%;height:58vh;background:radial-gradient(#4a3420,#1d140b)}
 const F={ammonite:"Ammonite",trilobite:"Trilobite",footprint:"Dinosaur Footprint",amber:"Insect in Amber",shark:"Shark Tooth",fern:"Fern Leaf Print",mammoth:"Mammoth Tooth",whale:"Ancient Whale Skull"};
 const IC={ammonite:"🐚",trilobite:"🪲",footprint:"🦶",amber:"🟠",shark:"🦈",fern:"🌿",mammoth:"🦣",whale:"🐋"};
 const OR={trilobite:'0deg 40deg auto',footprint:'0deg 40deg auto',whale:'70deg 75deg auto'};
+if(location.hash==='#noar')setTimeout(()=>{const h=document.getElementById('help');if(h)h.style.display='block'},300);
 const k=new URLSearchParams(location.search).get('k');const app=document.getElementById('app');
 const base=location.href.replace(/[?#].*$/,'').replace(/index\.html$/,'');
 if(F[k]){
   const glb=base+'models/'+k+'.glb';
   const sv='https://arvr.google.com/scene-viewer/1.0?file='+encodeURIComponent(glb)+'&mode=ar_preferred&title='+encodeURIComponent(F[k]);
-  const intent='intent://arvr.google.com/scene-viewer/1.0?file='+encodeURIComponent(glb)+'&mode=ar_preferred&title='+encodeURIComponent(F[k])+'#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url='+encodeURIComponent(location.href)+';end;';
+  const intent='intent://arvr.google.com/scene-viewer/1.0?file='+encodeURIComponent(glb)+'&mode=ar_preferred&title='+encodeURIComponent(F[k])+'#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url='+encodeURIComponent(location.href.split('#')[0]+'#noar')+';end;';
   const isAnd=/Android/i.test(navigator.userAgent);
   document.title=F[k]+' · AR';
   app.innerHTML=`<header><h1>${IC[k]} ${F[k]}</h1><p>Fossil Evidence Museum</p></header>
-  <model-viewer src="models/${k}.glb" alt="${F[k]}" ${OR[k]?`camera-orbit="${OR[k]}"`:''} rotation-per-second="18deg" camera-controls auto-rotate touch-action="pan-y" shadow-intensity="1" exposure="1.1" ar ar-modes="scene-viewer quick-look webxr" ar-scale="fixed" ar-placement="floor">
-   ${isAnd?'<span slot="ar-button"></span>':'<button slot="ar-button" class="btn" style="position:absolute;left:50%;bottom:14px;transform:translateX(-50%)">📱 See it on your desk</button>'}
+  <model-viewer id="mv" src="models/${k}.glb" alt="${F[k]}" ${OR[k]?`camera-orbit="${OR[k]}"`:''} rotation-per-second="18deg" camera-controls auto-rotate touch-action="pan-y" shadow-intensity="1" exposure="1.1" ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto" ar-placement="floor">
+   <span slot="ar-button"></span>
   </model-viewer>
-  ${isAnd?`<a class="btn" href="${intent}">📱 See it on your desk</a>`:''}
-  <p class="small">Point the camera at your desk or the floor and move the phone slowly until the fossil appears.</p>
+  <button class="btn" id="arGo">📱 See it on your desk</button>
+  ${isAnd?`<div><a class="btn" style="background:#6b4a2b;font-size:15px;padding:10px 18px" href="${intent}">Not working? Try way 2</a></div>`:''}
+  <p class="small" id="msg">Point the camera at your desk or the floor and move the phone slowly until the fossil appears.</p>
+  <div id="help" style="display:none;background:#5a1f12;margin:10px;padding:12px;border-radius:12px;font-size:15px">⚠️ AR could not start on this phone.<br>1) Install or update <b>Google Play Services for AR</b>:<br><a class="btn" style="font-size:15px;padding:10px 18px" href="https://play.google.com/store/apps/details?id=com.google.ar.core">Open Play Store</a><br>2) Open this page in <b>Chrome</b> (not inside another app) and try again.</div>
   <a href="./" style="color:#f1d3a7">⬅ All fossils</a><div style="height:20px"></div>`;
+  const mv=document.getElementById('mv'),help=()=>document.getElementById('help').style.display='block';
+  document.getElementById('arGo').onclick=async()=>{await customElements.whenDefined('model-viewer');if(mv.canActivateAR){mv.activateAR()}else{help()}};
+  mv.addEventListener('ar-status',e=>{if(e.detail.status==='failed')help()});
 }else{
   app.innerHTML=`<header><h1>🦴 Fossil Evidence Museum · AR</h1><p>Choose a fossil and see it on your desk!</p></header>
   <div class="grid">${Object.keys(F).map(x=>`<a href="?k=${x}">${IC[x]}<br>${F[x]}</a>`).join('')}</div>`;
