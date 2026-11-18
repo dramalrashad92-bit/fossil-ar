@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="color-scheme" content="light only">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Fossil Evidence Museum</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<style>
+:root{--sand:#f6ead2;--sand2:#e9d3ad;--rock:#7a5a3a;--ink:#2f2114;--accent:#f2a71b;--accent-d:#c27f0a;--navy:#1f2a4d;--ok:#3f9b55;--bad:#d1503f;--card:#fffaf0}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;font-family:"Baloo 2",system-ui,sans-serif;color:var(--ink);background:#1b140d}
+button{font-family:inherit;cursor:pointer}
+#c3d{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.top{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;gap:8px;padding:8px 12px;background:linear-gradient(rgba(20,14,8,.88),rgba(20,14,8,0));color:#fff;pointer-events:none;flex-wrap:wrap}
+.top>*{pointer-events:auto}
+.brand{font-weight:800;font-size:19px;display:flex;align-items:center;gap:6px;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+.where{font-weight:700;font-size:15px;background:rgba(255,255,255,.12);border-radius:999px;padding:2px 12px}
+.sp{margin-left:auto}
+.tb{border:0;border-radius:999px;padding:5px 13px;font-weight:700;font-size:14px;color:#fff;background:#3a2a1a;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.tb.icon{width:36px;height:36px;padding:0;font-size:18px}
+#passBtn{background:var(--navy)}#passBtn b{color:var(--accent)}
+#lobbyBtn{background:#6b4a2c}
+.dock{position:fixed;left:12px;bottom:12px;z-index:11;display:flex;align-items:flex-end;gap:6px;max-width:min(560px,calc(100% - 210px));pointer-events:none;transition:transform .35s}
+@media(max-width:640px){.dock{max-width:calc(100% - 24px);bottom:150px}}
+.dock.hide{transform:translateY(160%)}
+.dock img{width:100px;height:auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));pointer-events:auto;cursor:pointer}
+.bubble{background:#fff;border-radius:20px 20px 20px 6px;padding:10px 14px;font-size:17px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.3);margin-bottom:36px;pointer-events:auto;position:relative}
+.bubble b{color:var(--rock)}
+.bubble .say{position:absolute;right:-10px;top:-12px;border:0;background:var(--accent);color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;box-shadow:0 3px 0 var(--accent-d)}
+.bubble .x{position:absolute;right:26px;top:-12px;border:0;background:#fff;width:28px;height:28px;border-radius:50%;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.pad{position:fixed;right:14px;bottom:14px;z-index:11;display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:6px}
+.pad button{border:0;border-radius:16px;background:rgba(255,250,240,.88);font-size:22px;box-shadow:0 4px 0 rgba(0,0,0,.25);user-select:none;touch-action:none}
+.pad button.on{background:var(--accent);color:#fff}
+.hint{position:fixed;left:50%;top:58px;transform:translateX(-50%);z-index:9;background:rgba(20,14,8,.65);color:#fff;border-radius:999px;padding:4px 14px;font-size:14px;pointer-events:none;white-space:nowrap;transition:opacity .6s}
+.hallname{position:fixed;left:50%;top:36%;transform:translate(-50%,-50%);z-index:9;color:#fff;text-align:center;pointer-events:none;opacity:0;transition:opacity .5s;text-shadow:0 4px 16px rgba(0,0,0,.8)}
+.hallname.on{opacity:1}.hallname small{display:block;font-size:20px;font-weight:600}.hallname b{font-size:clamp(30px,6vw,56px);font-weight:800}
+.ai-log{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:8px;margin:8px 0;padding:4px}
+.ai-msg{display:flex;gap:8px;align-items:flex-end;max-width:88%}.ai-msg span{background:#fff3df;border-radius:16px;padding:9px 13px;font-size:16px;line-height:1.45}
+.ai-msg img{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#ffe5bf}.ai-msg.me{align-self:flex-end}.ai-msg.me span{background:#203060;color:#fff}
+.ai-sugg{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}.ai-sugg button{border:1px solid #e3cfa6;background:#fff;border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+.ai-in{display:flex;gap:8px}.ai-in input{flex:1;border:2px solid #e3cfa6;border-radius:12px;padding:10px 12px;font-size:16px}
+.ai-note{font-size:12px;color:#8a7a66;margin:6px 0 0}
+.ai-box{margin-top:14px;padding:12px;border:2px dashed #b9a2e0;border-radius:14px;background:#f7f2ff}.ai-box textarea{width:100%;box-sizing:border-box;border:2px solid #d9c9f2;border-radius:10px;padding:8px;font-size:15px;margin:6px 0;font-family:inherit}.ai-fb{margin-top:8px;font-size:15px;line-height:1.45}
+.report{margin:14px 0;padding:12px 14px;border:2px dashed #3f86b8;border-radius:14px;background:#eef6fc}.report h3{margin:0 0 6px}.report p{margin:4px 0}.rcode{font-family:monospace;font-size:20px;letter-spacing:1px;background:#fff;padding:2px 8px;border-radius:8px}
+.cr{margin:10px 0 18px;padding:12px;border:2px solid #3f86b8;border-radius:14px;background:#eef6fc}.cr textarea{width:100%;box-sizing:border-box;font-family:monospace;font-size:14px;border-radius:10px;border:1px solid #b8d3e8;padding:8px}.cr table{margin:8px 0;font-size:13px}
+.gl{border-bottom:2px dotted #3f86b8;cursor:pointer;color:inherit}.gl:hover{background:#e3f0fa}
+.gl-tip{position:fixed;z-index:99;background:#203060;color:#fff;border-radius:12px;padding:8px 12px;box-shadow:0 6px 18px rgba(0,0,0,.3);font-size:16px;max-width:220px}.gl-tip div{font-size:18px;margin-top:4px;font-family:Tahoma,Arial,sans-serif}.gl-tip .say-sm{padding:2px 8px;font-size:13px}
+@media(max-width:600px){.brand{font-size:14px}.where{font-size:11px}.tb{padding:4px 9px;font-size:12px}.tb.icon{width:30px;height:30px;font-size:15px}}
+.tipf{font-size:14px;color:#7a6a55;background:#fff6e6;border-radius:10px;padding:8px 10px;margin:10px 0}
+:root{color-scheme:light only}
+button,input,textarea,select{color:#2a1d10;font-family:inherit}
+.ov{position:fixed;inset:0;z-index:30;background:rgba(15,10,5,.72);display:none;align-items:center;justify-content:center;padding:12px;backdrop-filter:blur(3px)}
+.ov.on{display:flex;animation:pop .25s ease}
+@keyframes pop{from{opacity:0}to{opacity:1}}
+.panel{background:var(--card);border-radius:26px;max-width:1040px;width:100%;max-height:94vh;overflow:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.close{position:absolute;right:12px;top:10px;border:0;background:#fff;border-radius:999px;width:40px;height:40px;font-size:20px;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.pin{padding:18px 22px}
+h2{margin:0 0 6px;font-size:28px;line-height:1.1}h3{margin:6px 0;font-size:21px}
+.pill{display:inline-block;border-radius:999px;padding:2px 14px;color:#fff;font-weight:700;font-size:14px}
+.btn{border:0;border-radius:999px;background:var(--accent);color:#fff;font-weight:800;font-size:17px;padding:8px 20px;box-shadow:0 4px 0 var(--accent-d)}
+.btn.navy{background:var(--navy);box-shadow:0 4px 0 #0f1630}.btn.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--sand2)}
+.btn:active{transform:translateY(2px)}
+#intro{background:radial-gradient(circle at 50% 30%,#3b2a17,#120c06);z-index:40}
+.introbox{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;max-width:900px;width:100%}
+@media(max-width:700px){.introbox{grid-template-columns:1fr}.introbox img{max-height:220px;margin:auto}}
+.introbox img{height:min(56vh,420px);filter:drop-shadow(0 10px 20px rgba(0,0,0,.5))}
+.introcard{background:var(--card);border-radius:26px;padding:20px 24px;font-size:19px;line-height:1.45}
+.introcard h1{margin:0;font-size:clamp(28px,4.5vw,44px);line-height:1.05}
+.introcard .sub{color:var(--rock);font-weight:700}
+.introcard input{font:inherit;font-size:20px;border:3px solid var(--sand2);border-radius:14px;padding:6px 12px;width:min(320px,100%)}
+/* station */
+.st{display:grid;grid-template-columns:1.25fr 1fr}
+@media(max-width:800px){.st{grid-template-columns:1fr}}
+.st .pic{background:#2a1d12;border-radius:26px 0 0 26px;overflow:hidden;position:relative;min-height:300px}
+@media(max-width:800px){.st .pic{border-radius:26px 26px 0 0}}
+.st .pic img,.st .pic video{width:100%;height:100%;object-fit:cover;display:block}
+.st .pic model-viewer{width:100%;height:100%;min-height:380px;background:radial-gradient(circle at 50% 40%,#4a3825,#1d150d)}
+.num{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;margin-right:6px}
+.txt{font-size:18px;line-height:1.45}
+.txt p{margin:6px 0}
+.txt b{color:var(--rock)}
+.say-sm{border:0;background:var(--accent);color:#fff;border-radius:999px;padding:3px 12px;font-weight:700;font-size:15px;box-shadow:0 3px 0 var(--accent-d)}
+.say-sm.navy{background:var(--navy);box-shadow:0 3px 0 #0f1630}
+.q{margin-top:12px}.q p{font-weight:800;font-size:18px;margin:0 0 6px}
+.opts{display:grid;gap:8px}
+.opts button{font-weight:600;font-size:17px;text-align:left;border:2px solid var(--sand2);background:#fff;border-radius:14px;padding:8px 12px}
+.opts button.ok{border-color:var(--ok);background:#e6f4e8}.opts button.bad{border-color:var(--bad);background:#fbe9e6}
+.fb{min-height:26px;font-weight:800;margin-top:8px}.fb.good{color:var(--ok)}.fb.badc{color:var(--bad)}
+.lina-row{display:flex;gap:10px;align-items:center;margin-top:10px;background:#fff3d6;border-radius:16px;padding:6px 10px}
+.lina-row img{width:54px;height:54px;object-fit:cover;object-position:top;border-radius:50%;background:#ffe3a3;flex:none}
+.ar-btn{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);border:0;border-radius:999px;background:var(--accent);color:#fff;font-weight:800;font-size:18px;padding:10px 22px;box-shadow:0 4px 0 var(--accent-d);white-space:nowrap}
+.tabs2{position:absolute;left:12px;top:12px;display:flex;gap:6px;z-index:3}
+.tabs2 button{border:0;border-radius:999px;padding:4px 12px;font-weight:700;background:rgba(255,255,255,.85)}
+.tabs2 button.on{background:var(--accent);color:#fff}
+/* steps viewer */
+.steps{position:relative}
+.steps img,.steps video{width:100%;display:block;aspect-ratio:4/3;object-fit:cover}
+.stepnav{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#2a1d12;color:#fff}
+.dots{display:flex;gap:6px}.dots i{width:12px;height:12px;border-radius:50%;background:#6b5a4a}.dots i.on{background:var(--accent)}
+/* activities */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.tabs button{border:2px solid var(--sand2);background:#fff;border-radius:999px;padding:5px 14px;font-weight:800;font-size:16px}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tabs button.done::after{content:" ✅"}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chip{display:flex;align-items:center;gap:6px;background:#fff;border:2px solid var(--sand2);border-radius:14px;padding:4px 10px 4px 4px;font-weight:700;font-size:16px;cursor:pointer;user-select:none;transition:transform .15s}
+.chip img{width:44px;height:44px;border-radius:10px;object-fit:cover}
+.chip.sel{border-color:var(--accent);box-shadow:0 0 0 3px rgba(242,167,27,.35);transform:scale(1.05)}
+.chip.ok{border-color:var(--ok);background:#e6f4e8;cursor:default}
+.chip.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.bins{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.bin{border:3px dashed var(--sand2);border-radius:18px;padding:10px;min-height:110px;background:#fffdf8;cursor:pointer}
+.bin h4{margin:0 0 6px;font-size:17px}.bin .chips{margin:0}
+.order{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media(max-width:700px){.order{grid-template-columns:repeat(2,1fr)}}
+.ocard{position:relative;border-radius:14px;overflow:hidden;border:3px solid var(--sand2);cursor:pointer;background:#fff}
+.ocard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.ocard span{display:block;font-size:13px;font-weight:600;padding:4px 6px;line-height:1.2}
+.ocard b{position:absolute;left:6px;top:6px;width:32px;height:32px;border-radius:50%;background:var(--ok);color:#fff;display:none;place-items:center;font-size:18px}
+.ocard.picked{border-color:var(--ok)}.ocard.picked b{display:grid}
+.ocard.shake{animation:shake .35s}
+.ev{display:grid;gap:8px}
+.ev label{display:flex;gap:8px;align-items:flex-start;background:#fff;border:2px solid var(--sand2);border-radius:14px;padding:8px 10px;font-size:17px;cursor:pointer}
+.ev input{width:22px;height:22px;flex:none;margin-top:2px}
+/* passport */
+.hallblock{border:2px solid var(--sand2);border-radius:18px;padding:10px 12px;margin:10px 0}
+.stamps{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.stamp{border:3px dashed var(--sand2);border-radius:14px;padding:6px;text-align:center;font-weight:700;font-size:13px;background:#fffdf8;position:relative;line-height:1.15}
+.stamp img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:10px;filter:grayscale(1) opacity(.35)}
+.stamp.got{border-style:solid;border-color:var(--ok)}.stamp.got img{filter:none}
+.stamp.got::after{content:"✔";position:absolute;right:4px;top:2px;background:var(--ok);color:#fff;border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-size:14px}
+.badge{display:inline-block;border-radius:999px;padding:3px 12px;color:#fff;font-weight:800;opacity:.35;filter:grayscale(1)}.badge.got{opacity:1;filter:none}
+.cert{margin:auto;max-width:820px;background:#fffdf5;border:10px double var(--accent);border-radius:20px;padding:24px;text-align:center;position:relative}
+.cert h1{margin:0;font-size:clamp(28px,5vw,44px);color:var(--rock)}
+.cert .nm{font-size:clamp(30px,6vw,50px);font-weight:800;color:var(--navy);border-bottom:3px solid var(--sand2);display:inline-block;padding:0 20px}
+.cert img{position:absolute;bottom:10px;width:100px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.fcard{background:#fff;border-radius:18px;padding:8px;box-shadow:0 4px 12px rgba(60,40,20,.12);cursor:pointer;border:3px solid transparent}
+.fcard:hover{border-color:var(--accent)}.fcard img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px}
+.fcard b{display:block;font-size:17px}.fcard small{color:var(--rock)}
+.tg{line-height:1.5;font-size:17px}.tg table{border-collapse:collapse;width:100%;margin:8px 0}
+.tg td,.tg th{border:1px solid var(--sand2);padding:6px 8px;text-align:left;vertical-align:top}.tg th{background:var(--sand)}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%) translateY(-150px);background:var(--navy);color:#fff;padding:10px 20px;border-radius:999px;font-weight:800;z-index:60;transition:transform .35s;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.loading{position:fixed;inset:0;z-index:35;display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff;background:rgba(18,12,6,.92);font-size:20px;gap:12px}
+.loading.on{display:flex}
+.loading img{height:160px}
+.loading .bar{width:240px;height:12px;background:#3a2a1a;border-radius:99px;overflow:hidden}.loading .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:70}
+.ar-and{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);text-decoration:none;z-index:5}.pic{position:relative}
+</style>
+</head>
+<body>
+<canvas id="c3d"></canvas>
+<div class="top">
+  <div class="brand">🦴 Fossil Evidence Museum</div>
+  <span class="where" id="where">Lobby</span>
+  <span class="sp"></span>
+  <button class="tb" id="lobbyBtn" style="display:none">🏛️ Lobby</button>
+  <button class="tb" id="askBtn" style="display:none;background:#7b58b5">💬 Ask Adam</button>
+  <button class="tb" id="passBtn">🛂 Passport <b id="passCount">0</b></button>
+  <button class="tb" id="galBtn" title="All fossils">🗂️ Gallery</button>
+  <button class="tb" id="teachBtn" title="Teacher guide">👩‍🏫</button>
+  <button class="tb icon" id="liteBtn" title="Lite mode for slow devices (no wall videos)">⚡</button>
+  <button class="tb icon" id="soundBtn" title="Sound">🔊</button>
+</div>
+<div class="hint" id="hint">Drag to look · Arrows / WASD to walk · Tap the floor to go there · Tap a picture or fossil!</div>
+<div class="hallname" id="hallname"><small></small><b></b></div>
+<div class="dock hide" id="dock"><img id="dockImg" alt="Adam"><div class="bubble"><button class="x" id="dockX" aria-label="Hide">✕</button><button class="say" id="dockSay" aria-label="Read aloud">🔊</button><span id="dockText"></span></div></div>
+<div class="pad" id="pad"><span></span><button data-k="f" aria-label="Forward">⬆️</button><span></span><button data-k="l" aria-label="Turn left">↩️</button><button data-k="b" aria-label="Back">⬇️</button><button data-k="r" aria-label="Turn right">↪️</button></div>
+<div class="loading" id="loading"><img id="loadImg" alt=""><div id="loadTxt">Opening the hall…</div><div class="bar"><i id="loadbar"></i></div></div>
+
+<div class="ov on" id="intro"><div class="introbox"><img id="introImg" alt="Adam waving"><div class="introcard">
+  <div class="sub">Topic 7 · Fossil Evidence · Grade 3</div>
+  <h1>The Mystery of the Mixed-Up Fossils</h1>
+  <p id="introText">Hi! I'm <b>Adam</b>, a Grade 3 student and a fossil explorer! Our school museum got new fossils, but <b>the labels got mixed up!</b> 😱 Can you help me? Each hall is one lesson. Study every station, answer the questions to fill your <b>passport</b>, and use <b>evidence</b> to solve the mystery!</p>
+  <p style="margin:6px 0"><b>What is your name, explorer?</b><br><input id="nameIn" maxlength="24" placeholder="Type your name"></p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button class="btn" id="startBtn">🔦 Start the adventure</button><button class="btn ghost" id="introSay">🔊 Listen</button></div>
+</div></div></div>
+
+<div class="ov" id="ovSt"><div class="panel"><button class="close" data-close>✕</button><div id="stBody"></div></div></div>
+<div class="ov" id="ovAct"><div class="panel"><button class="close" data-close>✕</button><div class="pin" id="actBody"></div></div></div>
+<div class="ov" id="ovPass"><div class="panel"><button class="close" data-close>✕</button><div class="pin" id="passBody"></div></div></div>
+<div class="ov" id="ovAsk"><div class="panel"><button class="close" data-close>✕</button><div class="pin"><span class="pill" style="background:#7b58b5">AI · Ask Adam</span><h2>💬 Ask Adam about fossils</h2><div id="askLog" class="ai-log"></div><div class="ai-sugg"><button>What is a fossil?</button><button>Why are there whale fossils in the desert?</button><button>What is an index fossil?</button><button>ما هي الحفرية؟</button></div><form id="askForm" class="ai-in"><input id="askIn" maxlength="300" placeholder="Type your question…" autocomplete="off"><button class="btn navy" id="askSend">Send</button></form><p class="ai-note">Adam uses AI. He can make mistakes — check with your teacher.</p></div></div></div>
+<div class="ov" id="ovTest"><div class="panel"><button class="close" data-close>✕</button><div class="pin" id="testBody"></div></div></div>
+<div class="ov" id="ovCert"><div class="panel"><button class="close" data-close>✕</button><div class="pin" id="certBody"></div></div></div>
+<div class="ov" id="ovGal"><div class="panel"><button class="close" data-close>✕</button><div class="pin"><h2>🗂️ All Fossils</h2><p>Quick access for the board: tap a fossil to study it in 3D and AR.</p><div class="grid" id="galGrid"></div></div></div></div>
+<div class="ov" id="ovTeach"><div class="panel"><button class="close" data-close>✕</button><div class="pin tg" id="tg"></div></div></div>
+<div class="toast" id="toast"></div>
+<canvas class="confetti" id="confetti"></canvas>
+
+<script>
+// ===================== CONTENT =====================
+const FOSSILS={
+  ammonite:{name:"Ammonite",disp:1.0,facts:"An <b>ammonite</b> was a sea animal with a coiled shell. It is <b>extinct</b>. Minerals turned its hard shell into stone."},
+  trilobite:{name:"Trilobite",disp:1.05,orbit:"0deg 40deg auto",facts:"A <b>trilobite</b> had a hard shell and many legs. It crawled on the ocean floor. It is <b>extinct</b>."},
+  footprint:{name:"Dinosaur Footprint",disp:1.15,orbit:"0deg 40deg auto",facts:"A dinosaur stepped in soft mud. The mud dried and became rock. This is a <b>trace fossil</b>."},
+  amber:{name:"Insect in Amber",disp:.8,facts:"An insect got stuck in sticky tree resin. The resin hardened into <b>amber</b> and kept the whole insect."},
+  shark:{name:"Shark Tooth",disp:.8,facts:"Shark teeth are very hard, so they become fossils easily. Sharks live in the ocean."},
+  fern:{name:"Fern Leaf Print",disp:1.15,facts:"A fern leaf was pressed into mud. The rock kept its shape. Ferns grow in warm, wet places."},
+  mammoth:{name:"Mammoth Tooth",disp:1.08,facts:"A woolly mammoth used flat teeth like this to grind grass. Mammoths lived in a cold climate."},
+  whale:{name:"Ancient Whale Skull",disp:2.1,orbit:"70deg 75deg auto",facts:"This whale lived about 40 million years ago. Its fossils were found in Wadi Al-Hitan, in the desert of Egypt."}
+};
+const HALLS={
+ 1:{title:"Fossils",sub:"Hall 1 · Lesson 1",color:"#e08a3c",icon:"🐚",wall:"#f1d3a7",banner:["🐚 Hall 1 · Lesson 1: Fossils","I can describe what a fossil is and some ways fossils form."],pose:"point",fossils:["ammonite","trilobite","footprint","amber"],
+   intro:"Welcome to <b>Hall 1: Fossils</b>! Follow the <b>numbers on the floor</b>, from station 1 to station 8. Then go to the <b>Inquiry Table</b> in the middle to earn your badge!",
+   stations:[
+   {id:"h1s1",n:1,title:"What Is a Fossil?",img:"assets/h1/h1_digsite.webp",fossil:"ammonite",
+    text:["A <b>fossil</b> is the remains or traces of a living thing that lived <b>very long ago</b>.","Fossils can be tiny or as big as a dinosaur. Some fossils are <b>billions of years old</b>!","Most fossils form from <b>hard parts</b>, like bones, shells and teeth."],
+    q:{p:"Which part of an animal most often becomes a fossil?",o:["Hard parts like bones and shells","Soft parts like skin","Its fur"],a:0}},
+   {id:"h1s2",n:2,title:"How Does a Fossil Form?",steps:[
+     ["assets/h1/h1_step1.webp","1. A fish dies in the ocean. Its body sinks to the ocean floor."],
+     ["assets/h1/h1_step2.webp","2. Mud and sand <b>quickly</b> cover the body. Layers pile up on top."],
+     ["assets/h1/h1_step3.webp","3. Over a very long time the layers become rock. Water dissolves the fish. The empty space left behind is a <b>mold</b>."],
+     ["assets/h1/h1_step4.webp","4. Minerals fill the mold and harden. This makes a <b>cast</b> fossil."],
+     ["assets/h1/h1_step5.webp","5. After millions of years the ocean floor becomes land. Scientists find the fossil!"]],
+    text:["Most living things do <b>not</b> become fossils. They decay or are eaten.","A fossil forms only when the body is <b>buried quickly</b> by mud or sand — most often at the bottom of oceans, lakes, rivers or swamps."],
+    q:{p:"What must happen quickly for a fossil to form?",o:["The body must be buried by mud or sand","The animal must be very big","It must be a sunny day"],a:0}},
+   {id:"h1s3",n:3,title:"Molds and Casts",img:"assets/h1/h1_moldcast.webp",fossil:"trilobite",
+    text:["Think of a <b>tennis ball mold</b>: rubber is pressed into a mold to make the ball's shape.","When a body presses into mud, it leaves a print. The <b>empty print</b> is a <b>mold</b>.","When the print is <b>filled in</b> by minerals, it makes a <b>cast</b> with the same shape."],
+    q:{p:"An empty print of a shell in a rock is called a…",o:["Cast","Mold","Amber"],a:1}},
+   {id:"h1s4",n:4,title:"Trace Fossils",img:"assets/h1/h1_trace.webp",fossil:"footprint",
+    text:["A <b>trace fossil</b> is a mark left by a living thing — not its body.","Footprints, burrows, nests, eggshells and even dung can become trace fossils.","Footprints are <b>evidence</b> that an animal walked there, so the place was <b>not under water</b> then."],
+    q:{p:"Dung (animal poop) fossils give evidence about…",o:["What the animal ate","The animal's color","How old the animal was"],a:0}},
+   {id:"h1s5",n:5,title:"Fossils in Sap",img:"assets/h1/h1_amber.webp",fossil:"amber",
+    text:["Some fossils are not in rock! Sticky <b>resin</b> (sap) oozes down a tree trunk and can trap small insects.","The resin hardens and becomes honey-colored <b>amber</b>.","Amber keeps the <b>whole body</b> of the insect. Some amber is more than 100 million years old!"],
+    q:{p:"What was amber before it became hard?",o:["Ice","Tree resin (sap)","Sand"],a:1}},
+   {id:"h1s6",n:6,title:"Fossils in Ice",img:"assets/h1/h1_ice.webp",
+    text:["<b>Woolly mammoths</b> lived in many parts of Earth until about <b>4,000 years ago</b>.","Some mammoths <b>froze in ice</b> when the climate was colder than today.","The ice kept their <b>soft body parts</b>, so scientists can learn how they moved, what they ate and their body shape."],
+    q:{p:"Why can a frozen mammoth teach us more than bones alone?",o:["Its soft parts did not decay","It is still alive","Ice makes it bigger"],a:0}},
+   {id:"h1s7",n:7,title:"Fossils in Tar",img:"assets/h1/h1_tar.webp",
+    text:["<b>Tar pits</b> are areas of sticky tar that comes up from inside Earth, like the <b>La Brea tar pits</b> in California.","Thousands of years ago animals got stuck in the tar. Most were <b>meat eaters</b> chasing prey!","The tar <b>preserved their skeletons</b>."],
+    q:{p:"What did the tar keep safe for scientists?",o:["The animals' skeletons","Their fur colors","Their footprints in the air"],a:0}},
+   {id:"h1s8",n:8,title:"Extinct",img:"assets/h1/h1_extinct.webp",
+    text:["Many living things that formed fossils are <b>extinct</b>. <b>Extinct</b> means they <b>no longer live on Earth</b>.","Dinosaurs, trilobites, ammonites and woolly mammoths are extinct.","We know about them because of <b>fossil evidence</b>!"],
+    q:{p:"Which animal is extinct?",o:["Woolly mammoth","Cat","Camel"],a:0}}
+   ]},
+ 2:{title:"Fossils as a Record",sub:"Hall 2 · Lesson 2",color:"#a07a40",icon:"🪨",wall:"#e3cfa6",pose:"think",
+   banner:["🪨 Hall 2 · Lesson 2: Fossils as a Record","I can use fossil data to give evidence of living things and places from long ago."],
+   intro:"Welcome to <b>Hall 2: Fossils as a Record</b>! Fossils are <b>clues</b> about living things and places from <b>long ago</b>. Follow stations 1 to 8, then solve the <b>Inquiry Table</b>!",
+   stations:[
+   {id:"h2s1",n:1,title:"Clues from Fossils",img:"assets/h2/h2_clues.webp",fossil:"shark",
+    text:["<b>Paleontologists</b> are scientists who study fossils. They gather <b>data</b> — facts — from fossils.","A fossil of a <b>sea animal</b>, like a shark tooth, found far from any ocean is a clue: the area was once <b>covered by an ocean</b>.","Scientists put the clues from many fossils together to figure out what an area was like long ago."],
+    q:{p:"A shark tooth fossil is found on a mountain. What can you infer?",o:["The area was once covered by an ocean","Sharks lived on mountains","Someone dropped it yesterday"],a:0}},
+   {id:"h2s2",n:2,title:"Reading the Rock Layers",steps:[
+     ["assets/h2/h2_layers.webp","1. Rocks with fossils form in <b>layers</b> over a very long time. <b>Lower</b> layers are <b>older</b> than the layers above them."],
+     ["assets/h2/h2_era1.webp","2. <b>Paleozoic Era</b> (542–251 million years ago): early animals lived in the <b>ocean</b> — trilobites and fish. Early fish had no jaws."],
+     ["assets/h2/h2_era2.webp","3. <b>Mesozoic Era</b> (251–65.5 million years ago): <b>dinosaurs</b> roamed the land, the seas and the sky."],
+     ["assets/h2/h2_era3.webp","4. <b>Cenozoic Era</b> (65.5 million years ago to today): <b>mammals</b> like mammoths, monkeys and apes."]],
+    text:["Each rock layer formed at a different time, so the layer is a clue to a fossil's <b>age</b>.","If a fossil is in a layer that is <b>65 million years old</b>, the organism lived 65 million years ago.","Scientists used the <b>fossil record</b> to organize Earth's history into units of time called <b>eras</b>."],
+    q:{p:"Fossil A is in a low rock layer. Fossil B is in a layer above it. Which is older?",o:["Fossil A","Fossil B","They are the same age"],a:0}},
+   {id:"h2s3",n:3,title:"Index Fossils",img:"assets/h2/h2_index.webp",fossil:"trilobite",
+    text:["Scientists can also use <b>other fossils</b> in the same layer to tell the age.","<b>Index fossils</b> are fossils of organisms that lived for a <b>short, known time</b>. They were <b>plentiful</b> and are <b>easy to identify</b>.","The <b>trilobite</b> is an index fossil!"],
+    q:{p:"Which is true about an index fossil?",o:["It lived for a short, known time","It is still alive today","It is very hard to find"],a:0}},
+   {id:"h2s4",n:4,title:"Fossils Tell About Past Places",img:"assets/h2/h2_fern.webp",fossil:"fern",
+    text:["Fossils are <b>evidence</b> of the <b>environments</b> that existed long ago.","Ferns grow best in <b>warm, wet</b> places. A fern fossil found in a cold or dry place shows the area was once <b>warm and wet</b>.","Fossils of <b>sea animals</b> show an area was once <b>under water</b>."],
+    q:{p:"A fern fossil is found in a cold place. What was the place like long ago?",o:["Warm and wet","Icy and frozen","A dry desert"],a:0}},
+   {id:"h2s5",n:5,title:"Footprint Clues",img:"assets/h2/h2_tracks.webp",fossil:"footprint",
+    text:["Trace fossils give information that bones cannot. A footprint shows an animal's <b>size</b> and how it <b>moved</b>.","Big footprints mean a big animal. Footprints that get <b>farther apart</b> show the animal started <b>running</b>.","Many tracks side by side show animals that moved in a <b>group</b>."],
+    q:{p:"The footprints in a trail get farther and farther apart. What can you infer?",o:["The animal started to run","The animal got smaller","The animal stopped"],a:0}},
+   {id:"h2s6",n:6,title:"Long Ago and Today",img:"assets/h2/h2_nautilus.webp",fossil:"ammonite",
+    text:["Scientists <b>compare</b> fossils to <b>similar organisms that live today</b>.","The <b>ammonite</b> fossil looks like the shell of a living <b>nautilus</b>. A nautilus lives in the <b>ocean</b>, so ammonites lived in the ocean too.","If a new fossil looks like a fish that lives today, it probably lived in <b>water</b> too."],
+    q:{p:"A new fossil is very similar to a fish that lives today. What can you infer?",o:["It lived in water","It lived in a desert","It lived in the sky"],a:0}},
+   {id:"h2s7",n:7,title:"High-Tech Fossil Hunters",img:"assets/h2/h2_tech.webp",
+    text:["In <b>Death Valley</b>, California, a canyon holds one of the largest groups of animal fossils.","Only a few people may go in each year, so scientists use <b>GPS satellites</b> and <b>special cameras</b> to study tracks of mastodons, camels and tiny birds from <b>5 million years ago</b>.","Fossil sites must be <b>protected</b>. Taking fossils as souvenirs destroys evidence!"],
+    q:{p:"Why do scientists use cameras and GPS in Death Valley?",o:["To study fossils they cannot visit in person","To take fossils home","To make the canyon bigger"],a:0}},
+   {id:"h2s8",n:8,title:"Rebuilding Dinosaurs",img:"assets/h2/h2_rebuild.webp",
+    text:["It is <b>rare</b> to find a fossil of a whole body. Often only a few bones or trace fossils are found.","Computer engineers use <b>CAD</b> programs to infer a <b>3-D model</b> from incomplete fossils. A <b>3-D printer</b> then builds the model in layers of plastic.","Fossils do not tell everything — we do not know the <b>color</b> of most dinosaurs!"],
+    q:{p:"What can fossils NOT usually tell us about a dinosaur?",o:["Its color","Its size","Its shape"],a:0}}
+   ]},
+ 3:{title:"Living Things and Climate Change",sub:"Hall 3 · Lesson 3",color:"#3f86b8",icon:"❄️",wall:"#d3e6f3",pose:"dig",
+   banner:["❄️ Hall 3 · Lesson 3: Living Things and Climate Change","I can use fossil data to argue how some living things have responded to climate changes."],
+   intro:"Welcome to <b>Hall 3: Living Things and Climate Change</b>! When the climate changes, some living things <b>survive</b> and some <b>do not</b>. Let's find the fossil evidence!",
+   stations:[
+   {id:"h3s1",n:1,title:"Climate and Living Things",img:"assets/h3/h3_climates.webp",
+    text:["<b>Climate</b> is the usual weather of a place over a long time — hot or cold, wet or dry.","Different kinds of living things need <b>different climate conditions</b> to survive. A polar bear needs cold; a camel can live in a hot, dry desert.","Some kinds of living things <b>cannot survive</b> even a <b>small</b> climate change."],
+    q:{p:"Why can't a polar bear live in a hot desert?",o:["It needs a cold climate to survive","It does not like sand","It cannot see in the sun"],a:0}},
+   {id:"h3s2",n:2,title:"The Mojave Desert Story",steps:[
+     ["assets/h3/h3_moj1.webp","1. More than <b>250 million years ago</b>, the Mojave Desert was covered by a <b>shallow sea</b>. Many sea animals lived there."],
+     ["assets/h3/h3_moj2.webp","2. Between 225 and 65 million years ago, the seas <b>dried up</b>. The climate became <b>dry and windy</b>. Most sea organisms could not live there."],
+     ["assets/h3/h3_moj3.webp","3. Desert plants such as <b>cacti</b> and <b>yucca</b> grew. The plants gave food to animals like lizards, snakes and rabbits."]],
+    text:["Fossil clues show that the environment of a place can <b>change a lot</b> over time.","The organisms that lived in the Mojave long ago were very different from the ones that live there today."],
+    q:{p:"What happened to most sea animals when the Mojave sea dried up?",o:["They could not survive in the dry place","They grew legs and walked away","They turned into cacti"],a:0}},
+   {id:"h3s3",n:3,title:"Who Survives in the Desert?",img:"assets/h3/h3_survive.webp",
+    text:["Some plants and animals have features that help them live with <b>very little water</b>.","A <b>cactus</b> stores water in its thick stem. Lizards and snakes rest in the <b>shade</b> to stay cool. Insects and reptiles lived on Earth <b>before</b> mammals.","Fish and other sea animals need water, so they <b>cannot survive</b> in a desert."],
+    q:{p:"Why can a cactus survive in the desert?",o:["It stores water in its thick stem","It needs lots of rain","It lives under the sea"],a:0}},
+   {id:"h3s4",n:4,title:"Warming and Cooling",img:"assets/h3/h3_mastodon.webp",fossil:"mammoth",
+    text:["Climate on Earth has a <b>pattern</b> of warming and cooling. Scientists know this because they have <b>fossil evidence</b>.","Ice Age <b>mastodon</b> fossils have been found in <b>Florida</b>. Mastodons were big, hairy animals that lived in cold places.","So Florida was much <b>colder</b> long ago than it is today!"],
+    q:{p:"Mastodon fossils are found in warm Florida. What can you infer?",o:["Florida was colder long ago","Mastodons liked the beach","Florida was always warm"],a:0}},
+   {id:"h3s5",n:5,title:"Seed Clues",img:"assets/h3/h3_seeds.webp",
+    text:["Fossils of <b>plant seeds</b> give scientists good evidence of climate change.","Different kinds of plants survive in different climates. Palm trees need <b>warm</b> places; pine trees can grow in <b>cold</b> places.","If a seed of a certain plant is found in a rock layer, scientists can <b>infer</b> what the climate was like when that plant was living."],
+    q:{p:"Palm seed fossils are found in a rock layer. The climate was probably…",o:["Warm","Icy","Freezing"],a:0}},
+   {id:"h3s6",n:6,title:"Climate Change and Extinction",img:"assets/h3/h3_extinct.webp",
+    text:["Scientists <b>argue</b> — they make claims supported by <b>evidence</b>.","After big climate changes, some organisms <b>no longer appear</b> in the later fossil record.","The kinds of organisms that could not live in the changed environment became <b>extinct</b>, like the woolly mammoth after the Ice Age ended."],
+    q:{p:"What can happen to living things that cannot survive a big climate change?",o:["They become extinct","They become bigger","Nothing happens"],a:0}},
+   {id:"h3s7",n:7,title:"A Crocodile in the Desert",img:"assets/h3/h3_croc.webp",
+    text:["Scientists found a fossil of an <b>extinct crocodile</b> in a <b>desert</b> in Wyoming.","In ancient times, a <b>huge lake</b> covered the area. Crocodiles need warm water to live.","When the lake dried up and the climate changed, this kind of crocodile could not survive."],
+    q:{p:"Which evidence explains why the crocodile became extinct?",o:["The lake it lived in dried up","It ate too much","It was too small"],a:0}},
+   {id:"h3s8",n:8,title:"Be a Paleontologist!",img:"assets/h3/h3_career.webp",
+    text:["<b>Paleontology</b> is the science of learning about past life on Earth through fossils.","Paleontologists dig in dirt and rock and use <b>brushes</b> so fossils do not break. One large bone may take <b>weeks</b>!","They study fossils in a lab, use computers to model ancient Earth, and many are terrific <b>teachers</b>."],
+    q:{p:"Why do paleontologists use brushes?",o:["So the fossils do not break","To paint the fossils","To clean their shoes"],a:0}}
+   ]},
+4:{title:"A Whale in the Desert?!",sub:"Hall 4 · Final Mystery",color:"#7b58b5",icon:"🐋",wall:"#ecd9bd",pose:"think",
+   banner:["🐋 Final Mystery: A Whale in the Desert?!","I can use fossil evidence from all the lessons to explain how a place changed."],
+   intro:"The last label says <b>Western Desert of Egypt</b>… but it is a <b>whale</b>! 🐋 Collect the clues at the 8 stations, then solve the mystery at the <b>Inquiry Table</b>!",
+   stations:[
+   {id:"h4s1",n:1,title:"The Mystery Label",img:"assets/h4/h4_mystery.webp",fossil:"whale",
+    text:["Our last fossil has a strange label: <b>“Found in the Western Desert of Egypt.”</b>","But it is the skull of a <b>whale</b>! Whales live in the <b>sea</b>, not in deserts.","How did a whale get into the desert? Let's use <b>fossil evidence</b> from all the halls to solve the mystery!"],
+    q:{p:"Where do whales live today?",o:["In the ocean","In the desert","In trees"],a:0}},
+   {id:"h4s2",n:2,title:"The Story of the Valley",steps:[
+     ["assets/h4/h4_time1.webp","1. About <b>40 million years ago</b>, a warm sea covered this part of Egypt. Ancient whales, sharks, sea turtles and sea cows lived there."],
+     ["assets/h4/h4_bury.webp","2. When the whales died, their bodies sank and were <b>quickly buried</b> by sand and mud on the sea floor — just like in Hall 1!"],
+     ["assets/h4/h4_time2.webp","3. Over millions of years the sea moved away and the land rose. The old sea floor became <b>dry land</b>."],
+     ["assets/h4/h4_time3.webp","4. Today the desert wind blows the sand away and <b>uncovers</b> the whale skeletons in the rock."]],
+    text:["The <b>environment</b> of this place changed a lot over time — from sea to desert.","The fossils stayed in the rock layers as <b>evidence</b> of the old sea."],
+    q:{p:"What covered the Western Desert of Egypt 40 million years ago?",o:["A warm sea","Thick ice","A big city"],a:0}},
+   {id:"h4s3",n:3,title:"The Valley of the Whales",img:"assets/h4/h4_valley.webp",
+    text:["The place is called <b>Wadi Al-Hitan</b> — “the Valley of the Whales” — in the Fayoum area of Egypt.","Scientists have found <b>hundreds</b> of ancient whale skeletons there. Some are longer than a school bus!","It is a <b>UNESCO World Heritage Site</b>, so it is protected for everyone."],
+    q:{p:"What has been found in Wadi Al-Hitan?",o:["Hundreds of whale skeletons","Only dinosaur eggs","Frozen mammoths"],a:0}},
+   {id:"h4s4",n:4,title:"Whales with Tiny Legs",img:"assets/h4/h4_legs.webp",
+    text:["Some of these ancient whales, like <b>Basilosaurus</b>, had a very long body and <b>tiny back legs</b>!","The tiny legs were much too small for walking on land. The whale <b>swam</b> in the sea.","Fossils help scientists compare ancient whales with the whales that live <b>today</b>."],
+    q:{p:"Basilosaurus had tiny back legs. How did it move?",o:["It swam in the sea","It walked in the desert","It flew"],a:0}},
+   {id:"h4s5",n:5,title:"More Sea Fossils",img:"assets/h4/h4_seafossils.webp",fossil:"shark",
+    text:["Whales are not the only clue! Scientists also found <b>shark teeth</b>, <b>sea shells</b>, <b>sea turtles</b>, <b>sea cows</b> and roots of <b>mangrove</b> trees that grow by the sea.","All of these living things need <b>sea water</b> or a sea coast.","Many fossils that point to the same answer make the evidence <b>stronger</b>."],
+    q:{p:"Why are shark teeth in the desert important evidence?",o:["Sharks live in the sea, so the place was once a sea","Sharks live in deserts","Someone lost them yesterday"],a:0}},
+   {id:"h4s6",n:6,title:"Clues in the Rocks",img:"assets/h4/h4_rocks.webp",
+    text:["The rocks of the valley are in <b>layers</b>. Many layers are full of tiny <b>sea shells</b>.","These rocks formed at the bottom of a <b>sea</b>. The whale fossils are found <b>inside</b> these layers.","So the whales and the sea shells lived at the <b>same time</b> — about 40 million years ago."],
+    q:{p:"Whale fossils are in the same rock layer as sea shells. What does this tell us?",o:["They lived at the same time in the sea","The shells are much newer","The whale ate the rocks"],a:0}},
+   {id:"h4s7",n:7,title:"Protecting the Valley",img:"assets/h4/h4_protect.webp",
+    text:["Wadi Al-Hitan is an <b>open-air museum</b> with paths and a fossil museum.","Rangers protect the skeletons, so visitors <b>look but do not touch</b>.","Taking fossils destroys <b>evidence</b> that scientists and students need."],
+    q:{p:"What should visitors do at a fossil site?",o:["Look, but do not take fossils","Take a bone home","Walk on the skeletons"],a:0}},
+   {id:"h4s8",n:8,title:"Solve the Mystery!",img:"assets/h4/h4_solved.webp",
+    text:["You found the clues: whale skeletons, shark teeth, sea shells and rock layers from the <b>sea floor</b>.","<b>Claim:</b> The Western Desert of Egypt was once covered by a <b>sea</b> where whales lived.","Now go to the <b>Inquiry Table</b> to prove your claim and solve the mystery!"],
+    q:{p:"Which claim does all the evidence support?",o:["The desert was once covered by a sea","Whales lived in the sand","Whales fell from the sky"],a:0}}
+   ]}
+};
+const $=s=>document.querySelector(s);
+const L=p=>'assets/lina/'+p+'.webp';
+const TH=k=>'assets/thumbs/'+k+'.webp';
+const strip=h=>h.replace(/<[^>]+>/g,'').replace(/&[a-z]+;/g,' ');
+window.LITE=(()=>{try{const v=localStorage.getItem('fossil-lite');if(v!==null)return v==='1'}catch(e){}return !!(navigator.deviceMemory&&navigator.deviceMemory<=2)})();
+let S={name:'',done:{},halls:{},acts:{},seenHall:{}};
+try{S=Object.assign(S,JSON.parse(localStorage.getItem('fossil-museum-v3')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('fossil-museum-v3',JSON.stringify(S))}catch(e){}};
+const allStations=()=>Object.values(HALLS).flatMap(h=>h.stations);
+
+// ===================== SOUND & VOICE =====================
+let AC=null,soundOn=true;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
+function tone(f,d,type='sine',v=.15,w=0){const a=ac();if(!a||!soundOn)return;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,a.currentTime+w);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+w+d);o.connect(g).connect(a.destination);o.start(a.currentTime+w);o.stop(a.currentTime+w+d)}
+const SFX={click:()=>tone(660,.08,'triangle',.08),ok:()=>{tone(660,.12,'sine',.15);tone(990,.25,'sine',.15,.1)},bad:()=>{tone(220,.18,'square',.06);tone(180,.25,'square',.06,.12)},stamp:()=>{tone(120,.15,'triangle',.3);tone(80,.2,'sine',.25,.03)},fanfare:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.35,'triangle',.12,i*.13)),whoosh:()=>{tone(300,.3,'sine',.05);tone(500,.3,'sine',.04,.05)},page:()=>tone(880,.06,'triangle',.06)};
+$('#soundBtn').onclick=()=>{soundOn=!soundOn;$('#soundBtn').textContent=soundOn?'🔊':'🔇';if(!soundOn)stopTalk()};
+const VID=p=>p.replace(/assets\/(h\d)\//,'assets/$1v/').replace('.webp','.mp4');
+const playV=()=>setTimeout(()=>document.querySelectorAll('#stBody video').forEach(v=>{v.muted=true;v.play().catch(()=>{})}),50);
+const VIDHALLS=['h1','h2','h3','h4'];const hasVid=p=>VIDHALLS.some(h=>p.includes('assets/'+h+'/'));
+const MEDIA=(p,id)=>hasVid(p)&&!window.LITE?`<video ${id?'id="'+id+'"':''} src="${VID(p)}" poster="${p}" autoplay muted loop playsinline preload="auto"></video>`:`<img ${id?'id="'+id+'"':''} src="${p}" alt="">`;
+let voice=null;function pickVoice(){try{const vs=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));voice=vs.find(v=>/guy|davis|tony|andrew|brian|christopher|eric|david|mark|daniel|alex|fred|male/i.test(v.name)&&!/female/i.test(v.name))||vs.find(v=>/google us english/i.test(v.name))||vs[0]||null}catch(e){}}
+try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
+function talk(t){try{if(!soundOn)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(strip(t));if(voice)u.voice=voice;u.lang='en-US';u.rate=.92;u.pitch=1.15;speechSynthesis.speak(u)}catch(e){}}
+function stopTalk(){try{speechSynthesis.cancel()}catch(e){}}
+let dockMsg='';
+function lina(text,pose='wave',speak=false){dockMsg=text;$('#dockText').innerHTML=text;$('#dockImg').src=L(pose);$('#dock').classList.remove('hide');if(speak)talk(text)}
+$('#dockSay').onclick=()=>talk(dockMsg);$('#dockX').onclick=()=>{$('#dock').classList.add('hide');stopTalk()};$('#dockImg').onclick=()=>talk(dockMsg);
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2600)}
+function confetti(){const cv=$('#confetti'),cx=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;const P=Array.from({length:150},()=>({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*6,c:['#f2a71b','#e8611a','#3f9b55','#3f86b8','#7b58b5','#fff'][Math.random()*6|0],a:Math.random()*6}));let t=0;(function f(){cx.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.1;cx.fillStyle=p.c;cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);cx.restore()});if(++t<200)requestAnimationFrame(f);else cx.clearRect(0,0,cv.width,cv.height)})()}
+
+// ===================== OVERLAYS =====================
+function openOv(id){document.querySelectorAll('.ov.on').forEach(o=>{if(o.id!=='intro')o.classList.remove('on')});$('#'+id).classList.add('on');window.__paused=true}
+function closeOv(id){$('#'+id).classList.remove('on');if(id==='ovSt')$('#stBody').innerHTML='';if(![...document.querySelectorAll('.ov.on')].length)window.__paused=false;stopTalk()}
+document.addEventListener('click',e=>{const c=e.target.closest('[data-close]');if(c)closeOv(c.closest('.ov').id)});
+document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o&&o.id!=='intro')closeOv(o.id)}));
+
+// ===================== MODELS =====================
+const blobs={};
+const ASSET={whale:'1ebf154b879cb203c485ce1a76ca81d0',amber:'4947b16fdd74056b896e98b69476b337',ammonite:'c8101100c0ea74a85fa530307ecb8b10',fern:'ffebbe6d2fd9fa11c9af3735dac8c0c7',footprint:'3f072cd1e5c97494c7dbee2e03420ffa',mammoth:'bc9021141a536a0b7deec83c152872a8',shark:'2f633553315b0dabf5a9c9e3bc769d1c',trilobite:'a284222764e2255980ad01e3fec2c403'};
+const arURL=k=>ASSET[k]?location.origin+'/_blob/'+ASSET[k]:'';
+const GDRIVE={whale:'1n3kiQ8vgxa-STWmcKZuOB6zKfL6a-grF',amber:'1jrirMIIvEiw67f4CK0InHsq59gJETy_p',ammonite:'1p56dUq6JoFsfsFlwNMTBCoHb0suk8HwM',fern:'10-kaWd1g6WQXxw6Cug_NP--aam_MuHDE',footprint:'1_QW11ZD7-nt85FQvDo37sGwAbzo36BPe',mammoth:'1Q-DqkhKQs6O8KFNqr-PUKW1J7I1-qEgP',shark:'1d8ugiDvmhk38EMKFAmAtogfSiHdxfHvi',trilobite:'1ADpHv826zBlLezfah__sKxy6g2h7OYPT'};
+const pubGLB=k=>GDRIVE[k]?'https://drive.usercontent.google.com/download?id='+GDRIVE[k]+'&export=download':'';
+async function modelURL(k){return '../models/'+k+'.glb'}
+const IS_AND=false;
+function arLink(k){return FOSSILS[k]?'https://dramalrashad92-bit.github.io/fossil-ar/?k='+k:''}
+function mvHTML(k,url){const f=FOSSILS[k];return `<model-viewer src="${url}" alt="3D ${f.name}" ${f.orbit?`camera-orbit="${f.orbit}"`:''} camera-controls touch-action="pan-y" auto-rotate rotation-per-second="18deg" shadow-intensity="1" exposure="1.1" environment-image="neutral" ${IS_AND?'':'ar ar-modes="webxr scene-viewer quick-look"'} ar-scale="fixed" ar-placement="floor">${IS_AND?'':'<button slot="ar-button" class="ar-btn">📱 See it on your desk</button>'}</model-viewer>${IS_AND&&arLink(k)?`<a class="ar-btn ar-and" href="${arLink(k)}" target="_blank" rel="noopener">📱 See it on your desk</a>`:''}`}
+
+// ===================== PROGRESS =====================
+function updatePass(){const all=allStations(),n=all.filter(s=>S.done[s.id]).length;$('#passCount').textContent=n+'/'+all.length}
+function stamp(id,title){if(S.done[id])return;S.done[id]=1;save();updatePass();SFX.stamp();toast('🛂 Passport stamp: '+title)}
+function awardHall(n){if(S.halls[n])return;S.halls[n]=1;save();SFX.fanfare();confetti();const h=HALLS[n];toast('🏅 Badge: '+h.icon+' '+h.title);lina('You earned the <b>'+h.icon+' '+h.title+'</b> badge! Amazing work, '+(S.name||'explorer')+'!','celebrate',true);if([1,2,3,4].every(k=>S.halls[k])&&S.post==null)setTimeout(()=>openTest('post'),6000)}
+
+// ===================== STATION =====================
+function openStation(st,hallN){
+  const h=HALLS[hallN];SFX.click();
+  const pic=st.steps?`<div class="steps">${MEDIA(st.steps[0][0],'stepImg')}<div class="stepnav"><button class="say-sm" id="stPrev">◀</button><div class="dots">${st.steps.map((s,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div><button class="say-sm" id="stNext">▶</button></div><div style="background:#2a1d12;color:#fff;padding:8px 14px 14px;font-size:18px;line-height:1.35" id="stepTxt">${st.steps[0][1]}</div></div>`
+    :`${st.fossil&&st.img?`<div class="tabs2"><button class="on" data-v="img">🖼️ Picture</button><button data-v="3d">🧊 3D fossil</button></div>`:''}<div id="picBox" style="height:100%">${st.img?MEDIA(st.img):'<div style="color:#fff;padding:40px;text-align:center">Loading 3D…</div>'}</div>`;
+  $('#stBody').innerHTML=`<div class="st"><div class="pic">${pic}</div><div class="pin">
+    <span class="pill" style="background:${h.color}">${h.sub}</span>
+    <h2><span class="num">${st.n}</span>${st.title} ${S.done[st.id]?'✅':''}</h2>
+    <div class="txt">${st.text.map(t=>'<p>'+t+'</p>').join('')}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="say-sm" id="stRead">🔊 Adam, read it to me</button>${st.fossil&&st.img?`<button class="say-sm navy" id="st3d">🧊 Study the fossil in 3D / AR</button>`:''}</div>
+    <div class="q"><p>🔎 ${st.q.p}</p><div class="opts">${st.q.o.map((o,i)=>`<button data-i="${i}">${o}</button>`).join('')}</div></div>
+    <div class="lina-row"><img src="${L('face_curious')}" alt=""><span id="qfb">Answer to get a <b>passport stamp</b>!</span></div></div></div>`;
+  playV();glossify($('#stBody'));$('#stRead').onclick=()=>talk(st.title+'. '+(st.steps?st.steps.map(s=>s[1]).join(' '):'')+' '+st.text.join(' ')+' Question: '+st.q.p);
+  if(st.steps){let i=0;const show=d=>{i=(i+d+st.steps.length)%st.steps.length;{const v=$('#stepImg');if(v.tagName==='VIDEO'){v.poster=st.steps[i][0];v.src=VID(st.steps[i][0]);v.play().catch(()=>{})}else v.src=st.steps[i][0]}$('#stepTxt').innerHTML=st.steps[i][1];glossify($('#stepTxt'));document.querySelectorAll('.dots i').forEach((x,j)=>x.classList.toggle('on',j===i));SFX.page();talk(st.steps[i][1])};$('#stPrev').onclick=()=>show(-1);$('#stNext').onclick=()=>show(1)}
+  const show3d=async()=>{const url=await modelURL(st.fossil);$('#picBox').innerHTML=mvHTML(st.fossil,url);document.querySelectorAll('.tabs2 button').forEach(b=>b.classList.toggle('on',b.dataset.v==='3d'))};
+  const showImg=()=>{$('#picBox').innerHTML=MEDIA(st.img);playV();document.querySelectorAll('.tabs2 button').forEach(b=>b.classList.toggle('on',b.dataset.v==='img'))};
+  document.querySelectorAll('.tabs2 button').forEach(b=>b.onclick=()=>b.dataset.v==='3d'?show3d():showImg());
+  if($('#st3d'))$('#st3d').onclick=show3d;
+  if(st.fossil&&!st.img)show3d();
+  const opts=$('#stBody .opts');
+  opts.onclick=e=>{const b=e.target.closest('button');if(!b)return;opts.querySelectorAll('button').forEach(x=>x.classList.remove('ok','bad'));const ok=+b.dataset.i===st.q.a;b.classList.add(ok?'ok':'bad');const img=$('#stBody .lina-row img'),tx=$('#qfb');
+    if(ok){SFX.ok();img.src=L('face_happy');tx.innerHTML='Yes! That is the <b>evidence</b>! 🛂 Stamp added.';stamp(st.id,st.title);talk('Yes! Great thinking!');if(hallN===1&&!S.halls[1])setTimeout(()=>checkHall1Hint(),900)}
+    else{SFX.bad();img.src=L('face_surprised');tx.innerHTML='Hmm, not quite. Read the station again!';talk('Hmm, not quite. Read it again.')}};
+  openOv('ovSt');
+}
+async function openFossil(k){const url=await modelURL(k);const f=FOSSILS[k];const hn=+((location.hash.match(/hall-(\d)/)||[])[1]||0);const st=hn&&HALLS[hn]?HALLS[hn].stations.find(x=>x.fossil===k):null;$('#stBody').innerHTML=`<div class="st"><div class="pic">${mvHTML(k,url)}</div><div class="pin"><h2>${f.name}</h2><div class="txt"><p>${f.facts}</p></div><button class="say-sm" onclick="talk(${JSON.stringify(f.name+'. ')}+this.previousElementSibling.textContent)">🔊 Read</button><p class="tipf">🖐️ Drag the fossil to turn it. Pinch or scroll to zoom.<br>📱 On a phone or tablet, tap <b>See it on your desk</b> to put it in your classroom (AR)!</p>${st?`<button class="btn navy" id="toSt">📖 Learn more: Station ${st.n} · ${st.title}</button>`:''}</div></div>`;openOv('ovSt');if(st)$('#toSt').onclick=()=>openStation(st,hn);glossify($('#stBody .txt'))}
+function checkHall1Hint(){const n=HALLS[1].stations.filter(s=>S.done[s.id]).length;if(n===8)lina('All <b>8 stations</b> done! Now go to the <b>Inquiry Table</b> in the middle of the hall.','point',true)}
+
+// ===================== HALL 1 INQUIRY TABLE =====================
+const ACT1=[{k:'order',t:'1 · Put the steps in order'},{k:'sort',t:'2 · How did it form?'},{k:'claim',t:'3 · Use evidence'}];
+function openInquiry1(tab){
+  tab=tab||ACT1.find(a=>!S.acts['h1'+a.k])?.k||'order';
+  const B=$('#actBody');
+  B.innerHTML=`<span class="pill" style="background:${HALLS[1].color}">Hall 1 · Inquiry Table</span><h2>🔬 Be a Scientist!</h2><div class="tabs">${ACT1.map(a=>`<button data-t="${a.k}" class="${a.k===tab?'on':''} ${S.acts['h1'+a.k]?'done':''}">${a.t}</button>`).join('')}</div><div id="actIn"></div>`;
+  B.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>openInquiry1(b.dataset.t));
+  const I=$('#actIn');
+  const done=k=>{S.acts['h1'+k]=1;save();SFX.fanfare();B.querySelector(`.tabs [data-t="${k}"]`).classList.add('done');if(ACT1.every(a=>S.acts['h1'+a.k]))awardHall(1);else{const nx=ACT1.find(a=>!S.acts['h1'+a.k]);setTimeout(()=>openInquiry1(nx.k),1600)}};
+  const head=(t,pose='face_talking')=>`<div class="lina-row"><img src="${L(pose)}" alt=""><span>${t}</span> <button class="say-sm" onclick="talk(this.previousElementSibling.textContent)">🔊</button></div>`;
+  if(tab==='order'){
+    const st=HALLS[1].stations[1].steps;const shuffled=st.map((s,i)=>({s,i})).sort(()=>Math.random()-.5);let next=0;
+    I.innerHTML=head('How does a fish become a fossil? Tap the pictures in the right order, from <b>first</b> to <b>last</b>.')+`<div class="order" style="margin-top:10px">${shuffled.map(o=>`<div class="ocard" data-i="${o.i}"><b></b><img src="${o.s[0]}" alt=""><span>${o.s[1].replace(/^\d\.\s*/,'').replace(/<\/?b>/g,'')}</span></div>`).join('')}</div><div class="fb"></div>`;
+    I.querySelectorAll('.ocard').forEach(c=>c.onclick=()=>{if(c.classList.contains('picked'))return;const fb=I.querySelector('.fb');if(+c.dataset.i===next){next++;c.classList.add('picked');c.querySelector('b').textContent=next;SFX.ok();fb.className='fb good';fb.textContent=next<5?'✅ Yes! What happens next?':'🎉 Perfect order!';if(next===5)done('order')}else{SFX.bad();c.classList.add('shake');setTimeout(()=>c.classList.remove('shake'),400);fb.className='fb badc';fb.textContent='❌ Not yet. What happens first?'}});
+  }
+  if(tab==='sort'){
+    I.innerHTML=head('Tap a fossil, then tap the box that tells <b>how it became a fossil</b>.')+'<div class="chips pool"></div><div class="bins"></div><div class="fb"></div>';
+    sorter(I,[{b:0,label:'Ammonite',img:TH('ammonite')},{b:0,label:'Trilobite',img:TH('trilobite')},{b:1,label:'Dinosaur footprint',img:TH('footprint')},{b:2,label:'Insect',img:TH('amber')},{b:3,label:'Woolly mammoth',img:'assets/h1/h1_ice.webp'},{b:4,label:'Saber-tooth skeleton',img:'assets/h1/h1_tar.webp'}],
+      ['🪨 Minerals turned it to stone','👣 A print or mark in mud','🍯 Trapped in tree resin','🧊 Frozen in ice','⚫ Stuck in tar'],()=>done('sort'));
+  }
+  if(tab==='claim'){
+    const ev=[['Fossils form only when a body is buried quickly by mud or sand.',1],['Fossils most often form at the bottom of oceans, lakes, rivers or swamps.',1],['Most living things decay or are eaten and never become fossils.',1],['Fossils are pretty.',0],['Animals live everywhere.',0]];
+    I.innerHTML=head('My friend says: <b>“Fossils can form anywhere.”</b> Do you agree? Make a claim, then pick the <b>evidence</b> from the text.','face_curious')+
+      `<div class="q"><p>My claim:</p><div class="opts" id="cl"><button data-i="0">I agree. Fossils can form anywhere.</button><button data-i="1">I disagree. Fossils form only in certain conditions.</button></div></div>
+       <div class="q"><p>My evidence (pick all that support your claim):</p><div class="ev">${ev.map((e,i)=>`<label><input type="checkbox" data-i="${i}">${e[0]}</label>`).join('')}</div></div>
+       <div style="margin-top:10px"><button class="btn navy" id="chk">✔ Check my answer</button></div><div class="fb"></div>`;
+    let claim=null;I.querySelector('#cl').onclick=e=>{const b=e.target.closest('button');if(!b)return;claim=+b.dataset.i;I.querySelectorAll('#cl button').forEach(x=>x.classList.toggle('ok',x===b));SFX.click()};
+    I.querySelector('#chk').onclick=()=>{const fb=I.querySelector('.fb');const picked=[...I.querySelectorAll('.ev input')].filter(x=>x.checked).map(x=>+x.dataset.i);
+      if(claim!==1){SFX.bad();fb.className='fb badc';fb.textContent='❌ Look at station 2 again. Can a fossil form if nothing covers the body?';return}
+      const good=[0,1,2].every(i=>picked.includes(i))&&!picked.some(i=>i>2);
+      if(!good){SFX.bad();fb.className='fb badc';fb.textContent='Your claim is right! Now choose only the sentences that are real EVIDENCE.';return}
+      SFX.ok();fb.className='fb good';fb.innerHTML='🎉 Excellent! You used <b>evidence from the text</b> like a real scientist!';done('claim')};aiExplainBox(I,I.querySelector('.lina-row span').innerHTML);
+  }
+  openOv('ovAct');
+}
+const ACT2=[{k:'era',t:'1 · Which era?'},{k:'today',t:'2 · Long ago & today'},{k:'claim',t:'3 · Use evidence'}];
+function openInquiry2(tab){
+  tab=tab||ACT2.find(a=>!S.acts['h2'+a.k])?.k||'era';const H=HALLS[2];
+  const B=$('#actBody');
+  B.innerHTML=`<span class="pill" style="background:${H.color}">Hall 2 · Inquiry Table</span><h2>🔬 Be a Paleontologist!</h2><div class="tabs">${ACT2.map(a=>`<button data-t="${a.k}" class="${a.k===tab?'on':''} ${S.acts['h2'+a.k]?'done':''}">${a.t}</button>`).join('')}</div><div id="actIn"></div>`;
+  B.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>openInquiry2(b.dataset.t));
+  const I=$('#actIn');
+  const done=k=>{S.acts['h2'+k]=1;save();SFX.fanfare();B.querySelector(`.tabs [data-t="${k}"]`).classList.add('done');if(ACT2.every(a=>S.acts['h2'+a.k]))awardHall(2);else{const nx=ACT2.find(a=>!S.acts['h2'+a.k]);setTimeout(()=>openInquiry2(nx.k),1600)}};
+  const head=(t,pose='face_talking')=>`<div class="lina-row"><img src="${L(pose)}" alt=""><span>${t}</span> <button class="say-sm" onclick="talk(this.previousElementSibling.textContent)">🔊</button></div>`;
+  const ic=k=>`<img src="${TH(k)}" style="width:38px;height:38px;border-radius:8px;object-fit:cover;vertical-align:middle;margin-right:6px" alt="">`;
+  if(tab==='era'){
+    I.innerHTML=head('Which <b>era</b> did each living thing live in? Tap a picture, then tap its era. Remember: <b>lower layers are older</b>!')+'<div class="chips pool"></div><div class="bins"></div><div class="fb"></div>';
+    sorter(I,[{b:0,label:'Trilobite',img:TH('trilobite')},{b:0,label:'Early jawless fish',img:'assets/h2/h2_era1.webp'},{b:1,label:'Dinosaur footprint',img:TH('footprint')},{b:1,label:'Archaeopteryx',img:'assets/h2/h2_era2.webp'},{b:2,label:'Woolly mammoth',img:TH('mammoth')},{b:2,label:'Monkeys and apes',img:'assets/h2/h2_era3.webp'}],
+      ['🐟 Paleozoic · oldest (bottom layers)','🦕 Mesozoic · middle layers','🦣 Cenozoic · youngest (top layers)'],()=>done('era'));
+  }
+  if(tab==='today'){
+    I.innerHTML=head('Compare <b>long ago</b> and <b>today</b>! Tap a living thing, then tap the fossil that looks like it.')+'<div class="chips pool"></div><div class="bins"></div><div class="fb"></div>';
+    sorter(I,[{b:0,label:'Nautilus',img:'assets/h2/h2_nautilus.webp'},{b:1,label:'Horseshoe crab',img:'assets/h2/h2_live_crab.webp'},{b:2,label:'Fern plant',img:'assets/h2/h2_live_fern.webp'},{b:3,label:'Shark',img:'assets/h2/h2_live_shark.webp'},{b:4,label:'Elephant',img:'assets/h2/h2_live_elephant.webp'},{b:5,label:'Small fly',img:'assets/h2/h2_live_fly.webp'}],
+      [ic('ammonite')+'Ammonite',ic('trilobite')+'Trilobite',ic('fern')+'Fern fossil',ic('shark')+'Shark tooth',ic('mammoth')+'Woolly mammoth',ic('amber')+'Insect in amber'],()=>done('today'));
+  }
+  if(tab==='claim'){
+    const ev=[['The fossil fish looks like fish that live in lakes today.',1],['Fish need water to live.',1],['Fossils of water animals found far from water show the area was once covered by water.',1],['Deserts are very hot.',0],['Fish can walk on sand.',0]];
+    I.innerHTML=head('Scientists found a <b>fossil fish</b> in a desert. It looks like fish that live in <b>lakes</b> today. My friend says: <b>“This desert was always dry.”</b> Do you agree?','face_curious')+
+      `<div class="q"><p>My claim:</p><div class="opts" id="cl"><button data-i="0">I agree. The desert was always dry.</button><button data-i="1">I disagree. The desert was once covered by water.</button></div></div>
+       <div class="q"><p>My evidence (pick all that support your claim):</p><div class="ev">${ev.map((e,i)=>`<label><input type="checkbox" data-i="${i}">${e[0]}</label>`).join('')}</div></div>
+       <div style="margin-top:10px"><button class="btn navy" id="chk">✔ Check my answer</button></div><div class="fb"></div>`;
+    let claim=null;I.querySelector('#cl').onclick=e=>{const b=e.target.closest('button');if(!b)return;claim=+b.dataset.i;I.querySelectorAll('#cl button').forEach(x=>x.classList.toggle('ok',x===b));SFX.click()};
+    I.querySelector('#chk').onclick=()=>{const fb=I.querySelector('.fb');const picked=[...I.querySelectorAll('.ev input')].filter(x=>x.checked).map(x=>+x.dataset.i);
+      if(claim!==1){SFX.bad();fb.className='fb badc';fb.textContent='❌ Look at stations 1 and 6 again. Where do fish live?';return}
+      const good=[0,1,2].every(i=>picked.includes(i))&&!picked.some(i=>i>2);
+      if(!good){SFX.bad();fb.className='fb badc';fb.textContent='Your claim is right! Now choose only the sentences that are real EVIDENCE.';return}
+      SFX.ok();fb.className='fb good';fb.innerHTML='🎉 Excellent! You used <b>fossil data</b> as evidence, just like a paleontologist!';done('claim')};aiExplainBox(I,I.querySelector('.lina-row span').innerHTML);
+  }
+  openOv('ovAct');
+}
+const ACT3=[{k:'climate',t:'1 · Read the climate'},{k:'survive',t:'2 · Who survives?'},{k:'claim',t:'3 · Make an argument'}];
+function openInquiry3(tab){
+  tab=tab||ACT3.find(a=>!S.acts['h3'+a.k])?.k||'climate';const H=HALLS[3];
+  const B=$('#actBody');
+  B.innerHTML=`<span class="pill" style="background:${H.color}">Hall 3 · Inquiry Table</span><h2>🔬 Climate Detectives!</h2><div class="tabs">${ACT3.map(a=>`<button data-t="${a.k}" class="${a.k===tab?'on':''} ${S.acts['h3'+a.k]?'done':''}">${a.t}</button>`).join('')}</div><div id="actIn"></div>`;
+  B.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>openInquiry3(b.dataset.t));
+  const I=$('#actIn');
+  const done=k=>{S.acts['h3'+k]=1;save();SFX.fanfare();B.querySelector(`.tabs [data-t="${k}"]`).classList.add('done');if(ACT3.every(a=>S.acts['h3'+a.k]))awardHall(3);else{const nx=ACT3.find(a=>!S.acts['h3'+a.k]);setTimeout(()=>openInquiry3(nx.k),1600)}};
+  const head=(t,pose='face_talking')=>`<div class="lina-row"><img src="${L(pose)}" alt=""><span>${t}</span> <button class="say-sm" onclick="talk(this.previousElementSibling.textContent)">🔊</button></div>`;
+  if(tab==='climate'){
+    I.innerHTML=head('Each fossil is a <b>climate clue</b>! Tap a fossil, then tap the climate it lived in.')+'<div class="chips pool"></div><div class="bins"></div><div class="fb"></div>';
+    sorter(I,[{b:0,label:'Woolly mammoth',img:TH('mammoth')},{b:0,label:'Mastodon',img:'assets/h3/h3_mastodon.webp'},{b:1,label:'Fern fossil',img:TH('fern')},{b:1,label:'Ancient crocodile',img:'assets/h3/h3_croc.webp'},{b:2,label:'Cactus and yucca',img:'assets/h3/h3_moj3.webp'},{b:3,label:'Shark tooth',img:TH('shark')},{b:3,label:'Ammonite',img:TH('ammonite')}],
+      ['🧊 Cold','🌴 Warm and wet','🌵 Dry desert','🌊 Ocean'],()=>done('climate'));
+  }
+  if(tab==='survive'){
+    I.innerHTML=head('The shallow sea dries up and becomes a <b>dry, windy desert</b>. Which living things <b>can survive</b> there?')+'<div class="chips pool"></div><div class="bins"></div><div class="fb"></div>';
+    sorter(I,[{b:0,label:'🦎 Lizard'},{b:1,label:'🐟 Fish'},{b:0,label:'🌵 Cactus'},{b:1,label:'🦈 Shark'},{b:0,label:'🐍 Snake'},{b:1,label:'🪸 Coral'},{b:0,label:'🪲 Beetle'},{b:1,label:'🐚 Sea snail'}],
+      ['✅ Can survive in the desert','❌ Cannot survive'],()=>done('survive'));
+  }
+  if(tab==='claim'){
+    const ev=[['After big climate changes, some organisms no longer appear in later rock layers.',1],['An extinct crocodile fossil was found in a Wyoming desert where a huge lake used to be.',1],['Woolly mammoths needed a cold climate and became extinct after the Ice Age ended.',1],['Crocodiles have sharp teeth.',0],['Deserts are sunny.',0]];
+    I.innerHTML=head('My friend says: <b>“A change in climate cannot make living things extinct.”</b> Do you agree? Make an <b>argument</b> with evidence!','face_curious')+
+      `<div class="q"><p>My claim:</p><div class="opts" id="cl"><button data-i="0">I agree. Climate change cannot cause extinction.</button><button data-i="1">I disagree. Climate change can cause extinction.</button></div></div>
+       <div class="q"><p>My evidence (pick all that support your claim):</p><div class="ev">${ev.map((e,i)=>`<label><input type="checkbox" data-i="${i}">${e[0]}</label>`).join('')}</div></div>
+       <div style="margin-top:10px"><button class="btn navy" id="chk">✔ Check my answer</button></div><div class="fb"></div>`;
+    let claim=null;I.querySelector('#cl').onclick=e=>{const b=e.target.closest('button');if(!b)return;claim=+b.dataset.i;I.querySelectorAll('#cl button').forEach(x=>x.classList.toggle('ok',x===b));SFX.click()};
+    I.querySelector('#chk').onclick=()=>{const fb=I.querySelector('.fb');const picked=[...I.querySelectorAll('.ev input')].filter(x=>x.checked).map(x=>+x.dataset.i);
+      if(claim!==1){SFX.bad();fb.className='fb badc';fb.textContent='❌ Look at stations 6 and 7 again. What happened to the mammoth and the crocodile?';return}
+      const good=[0,1,2].every(i=>picked.includes(i))&&!picked.some(i=>i>2);
+      if(!good){SFX.bad();fb.className='fb badc';fb.textContent='Your claim is right! Now choose only the sentences that are real EVIDENCE.';return}
+      SFX.ok();fb.className='fb good';fb.innerHTML='🎉 Great argument! You supported your claim with <b>fossil evidence</b>!';done('claim')};aiExplainBox(I,I.querySelector('.lina-row span').innerHTML);
+  }
+  openOv('ovAct');
+}
+
+const ACT4=[{k:'clues',t:'1 · Sort the clues'},{k:'time',t:'2 · Order the story'},{k:'claim',t:'3 · Solve the mystery'}];
+function openInquiry4(tab){
+  tab=tab||ACT4.find(a=>!S.acts['h4'+a.k])?.k||'clues';const H=HALLS[4];
+  const B=$('#actBody');
+  B.innerHTML=`<span class="pill" style="background:${H.color}">Final Mystery · Inquiry Table</span><h2>🕵️ Solve the Whale Mystery!</h2><div class="tabs">${ACT4.map(a=>`<button data-t="${a.k}" class="${a.k===tab?'on':''} ${S.acts['h4'+a.k]?'done':''}">${a.t}</button>`).join('')}</div><div id="actIn"></div>`;
+  B.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>openInquiry4(b.dataset.t));
+  const I=$('#actIn');
+  const done=k=>{S.acts['h4'+k]=1;save();SFX.fanfare();B.querySelector(`.tabs [data-t="${k}"]`).classList.add('done');if(ACT4.every(a=>S.acts['h4'+a.k])){awardHall(4);setTimeout(()=>lina('🎉 <b>Mystery solved!</b> The Western Desert of Egypt was once a <b>sea</b>. The whale fossils, shark teeth, sea shells and rock layers are the <b>evidence</b>. You are a real paleontologist, '+(S.name||'explorer')+'!','celebrate',true),1800)}else{const nx=ACT4.find(a=>!S.acts['h4'+a.k]);setTimeout(()=>openInquiry4(nx.k),1600)}};
+  const head=(t,pose='face_talking')=>`<div class="lina-row"><img src="${L(pose)}" alt=""><span>${t}</span> <button class="say-sm" onclick="talk(this.previousElementSibling.textContent)">🔊</button></div>`;
+  if(tab==='clues'){
+    I.innerHTML=head('A detective only uses <b>evidence</b>! Which clues show that the desert was once a <b>sea</b>?')+'<div class="chips pool"></div><div class="bins"></div><div class="fb"></div>';
+    sorter(I,[{b:0,label:'🐋 Whale skeletons'},{b:1,label:'☀️ The desert is hot today'},{b:0,label:'🦈 Shark teeth'},{b:1,label:'🐪 Camels live there now'},{b:0,label:'🐚 Sea shells in the rock layers'},{b:1,label:'📸 Tourists take photos'},{b:0,label:'🐢 Sea turtle shells'}],
+      ['🔎 Evidence of an old sea','🚫 Not evidence'],()=>done('clues'));
+  }
+  if(tab==='time'){
+    const st=HALLS[4].stations[1].steps;const shuffled=st.map((s,i)=>({s,i})).sort(()=>Math.random()-.5);let next=0;
+    I.innerHTML=head('How did the whale get into the desert? Tap the pictures in order, from <b>first</b> to <b>last</b>.')+`<div class="order" style="margin-top:10px">${shuffled.map(o=>`<div class="ocard" data-i="${o.i}"><b></b><img src="${o.s[0]}" alt=""><span>${o.s[1].replace(/^\d\.\s*/,'').replace(/<\/?b>/g,'')}</span></div>`).join('')}</div><div class="fb"></div>`;
+    I.querySelectorAll('.ocard').forEach(c=>c.onclick=()=>{if(c.classList.contains('picked'))return;const fb=I.querySelector('.fb');if(+c.dataset.i===next){next++;c.classList.add('picked');c.querySelector('b').textContent=next;SFX.ok();fb.className='fb good';fb.textContent=next<st.length?'✅ Yes! What happened next?':'🎉 Perfect order!';if(next===st.length)done('time')}else{SFX.bad();c.classList.add('shake');setTimeout(()=>c.classList.remove('shake'),400);fb.className='fb badc';fb.textContent='❌ Not yet. What happened first?'}});
+  }
+  if(tab==='claim'){
+    const ev=[['Whale fossils are found together with shark teeth and sea shells.',1],['The rock layers are full of tiny sea shells, which form in the sea.',1],['Whales need water to live.',1],['The desert is very hot.',0],['Camels can walk on sand.',0]];
+    I.innerHTML=head('Time to solve it! My friend says: <b>“Whales used to live in the desert sand!”</b> What is the best claim?','face_curious')+
+      `<div class="q"><p>My claim:</p><div class="opts" id="cl"><button data-i="0">Whales lived in the desert sand.</button><button data-i="1">The desert was once covered by a sea where whales lived.</button><button data-i="2">People carried the whales into the desert.</button></div></div>
+       <div class="q"><p>My evidence (pick all that support your claim):</p><div class="ev">${ev.map((e,i)=>`<label><input type="checkbox" data-i="${i}">${e[0]}</label>`).join('')}</div></div>
+       <div style="margin-top:10px"><button class="btn navy" id="chk">✔ Check my answer</button></div><div class="fb"></div>`;
+    let claim=null;I.querySelector('#cl').onclick=e=>{const b=e.target.closest('button');if(!b)return;claim=+b.dataset.i;I.querySelectorAll('#cl button').forEach(x=>x.classList.toggle('ok',x===b));SFX.click()};
+    I.querySelector('#chk').onclick=()=>{const fb=I.querySelector('.fb');const picked=[...I.querySelectorAll('.ev input')].filter(x=>x.checked).map(x=>+x.dataset.i);
+      if(claim!==1){SFX.bad();fb.className='fb badc';fb.textContent='❌ Think again! Look at stations 2, 5 and 6. What did this place look like 40 million years ago?';return}
+      const good=[0,1,2].every(i=>picked.includes(i))&&!picked.some(i=>i>2);
+      if(!good){SFX.bad();fb.className='fb badc';fb.textContent='Your claim is right! Now choose only the sentences that are real EVIDENCE.';return}
+      SFX.ok();fb.className='fb good';fb.innerHTML='🎉 <b>Mystery solved!</b> You used evidence from all the halls!';done('claim')};aiExplainBox(I,I.querySelector('.lina-row span').innerHTML);
+  }
+  openOv('ovAct');
+}
+
+// ===================== ASK LINA (AI) =====================
+let SAMPLE=null;const askLog=[];
+const LINA_SYS=()=>`You are Adam, a cheerful 8-year-old boy who is the student guide of the "Fossil Evidence Museum", a 3D museum for Grade 3 science (Elevate Science, Topic 7: Fossil Evidence) at a school in Saudi Arabia. Students learn science in English; many are still learning English.
+The museum has 4 halls:
+${Object.keys(HALLS).map(n=>`Hall ${n} – ${HALLS[n].title}: `+HALLS[n].stations.map(s=>s.n+'. '+s.title).join('; ')).join('\n')}
+Rules:
+- Answer in VERY simple English (short sentences, Grade 3 level), 2 to 4 sentences, friendly, like a kid guide. No markdown, no lists.
+- If the student writes in Arabic, answer in simple English first, then add one short Arabic sentence that explains the main idea.
+- Stay on science: fossils, rocks, living things, climate, the museum. If the question is off-topic or personal, kindly bring the student back to fossils.
+- When helpful, tell the student which hall and station to visit (for example "Visit Hall 2, station 3!").
+- Use correct science only. If you are not sure, say so and suggest asking the teacher.
+- Never ask for personal information. Never say anything scary or unkind.
+The student's name is ${S.name||'a student'}.`;
+async function initAI(){try{const c=window.claude;if(!c||!c.use)return;SAMPLE=await c.use('sample');if(SAMPLE){$('#askBtn').style.display='';document.body.classList.add('has-ai')}}catch(e){SAMPLE=null}}
+function aiBubble(who,html){const d=document.createElement('div');d.className='ai-msg '+who;d.innerHTML=who==='lina'?`<img src="${L('face_talking')}" alt=""><span></span>`:`<span></span>`;d.querySelector('span').innerHTML=html;$('#askLog').appendChild(d);$('#askLog').scrollTop=1e6;return d.querySelector('span')}
+function openAsk(){if(!$('#askLog').children.length)aiBubble('lina','Hi'+(S.name?' '+S.name:'')+'! 👋 I am Adam. Ask me anything about <b>fossils</b>! You can write in English or Arabic.');openOv('ovAsk');setTimeout(()=>$('#askIn').focus(),200)}
+let askBusy=false;
+async function sendAsk(q){q=(q||$('#askIn').value).trim();if(!q||askBusy||!SAMPLE)return;$('#askIn').value='';askBusy=true;$('#askSend').disabled=true;
+  aiBubble('me',q.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])));askLog.push({role:'user',content:q});const out=aiBubble('lina','…');
+  try{const msgs=[{role:'user',content:LINA_SYS()+'\n\nReply "OK" to start.'},{role:'assistant',content:'OK'},...askLog.slice(-8)];
+    const r=await SAMPLE(msgs,{modelTier:'quick',cache:false,onText:({text})=>{out.textContent=text;$('#askLog').scrollTop=1e6}});
+    out.textContent=r.text;askLog.push({role:'assistant',content:r.text});talk(r.text)}
+  catch(e){out.textContent=e&&e.code==='rate_limited'?'I need a little rest. Please ask me again in a minute! 😊':'Sorry, I cannot answer right now. Please ask your teacher! 😊';askLog.pop()}
+  askBusy=false;$('#askSend').disabled=false}
+// AI feedback on the student's own explanation (claim tasks)
+function aiExplainBox(I,scenario){if(!SAMPLE)return;const box=document.createElement('div');box.className='ai-box';
+  box.innerHTML=`<p>✍️ <b>Bonus:</b> Explain your answer in your own words, and Adam will give you feedback!</p><textarea rows="3" placeholder="I think … because …"></textarea><button class="btn navy">💬 Get Adam's feedback</button><div class="ai-fb"></div>`;
+  I.appendChild(box);const ta=box.querySelector('textarea'),fb=box.querySelector('.ai-fb'),bt=box.querySelector('button');
+  bt.onclick=async()=>{const t=ta.value.trim();if(t.length<8){fb.textContent='Write a little more first! ✏️';return}bt.disabled=true;fb.textContent='Adam is reading… 📖';
+    try{const r=await SAMPLE(`You are Adam, a kind 8-year-old museum guide giving feedback to a Grade 3 student (English learner).
+Task the student answered: ${strip(scenario)}
+Student's explanation: """${t}"""
+Give feedback in simple English, 3 short sentences maximum, no markdown: 1) praise one good thing, 2) say if the claim is supported by evidence, 3) give ONE tip to make it better (for example add the word "because" or add a fossil clue). If the student wrote in Arabic, add one short Arabic sentence at the end.`,{modelTier:'quick',cache:false,onText:({text})=>{fb.textContent=text}});
+      fb.textContent=r.text;talk(r.text);SFX.ok()}catch(e){fb.textContent='Adam cannot read it right now. Show it to your teacher! 😊'}bt.disabled=false}}
+
+// ===================== PRE / POST TEST + REPORT CODE =====================
+const TEST=[
+ {p:"What is a fossil?",o:["The remains or traces of a living thing from long ago","A shiny rock from a store","A living animal in the sea"],a:0},
+ {p:"Where do fossils most often form?",o:["In mud or sand at the bottom of oceans, lakes or rivers","On top of tall mountains in the snow","Inside a house"],a:0},
+ {p:"Fossil A is in a lower rock layer. Fossil B is in a layer above it. Which is older?",o:["Fossil A","Fossil B","They are the same age"],a:0},
+ {p:"A shark tooth fossil is found on a mountain. What can you infer?",o:["The area was once covered by an ocean","Sharks lived on mountains","The mountain is made of teeth"],a:0},
+ {p:"Woolly mammoths needed a cold climate. Now they are extinct. What does this show?",o:["A change in climate can cause extinction","Mammoths are still alive","Climate never changes"],a:0},
+ {p:"Whale fossils are found in the desert of Egypt. What does this tell us?",o:["The desert was once covered by a sea","Whales can live in sand","Someone carried the whales there"],a:0}];
+function openTest(kind){let i=0,score=0;const order=TEST.map(q=>{const idx=q.o.map((_,k)=>k).sort(()=>Math.random()-.5);return{p:q.p,o:idx.map(k=>q.o[k]),a:idx.indexOf(q.a)}});
+  const B=$('#testBody');
+  const show=()=>{if(i>=order.length)return finish();const q=order[i];
+    B.innerHTML=`<span class="pill" style="background:#203060">${kind==='pre'?'Before you explore':'Final check'} · ${i+1}/${order.length}</span><h2>${kind==='pre'?'🧠 What do you know already?':'🎯 What did you learn?'}</h2><div class="q"><p>${q.p} <button class="say-sm" onclick="talk(this.parentElement.textContent)">🔊</button></p><div class="opts">${q.o.map((o,k)=>`<button data-k="${k}">${o}</button>`).join('')}</div></div>${kind==='pre'?'<p style="margin-top:10px"><button class="btn" id="tSkip" style="background:#eee;color:#555">Skip for now</button></p>':''}`;
+    B.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{if(+b.dataset.k===q.a)score++;SFX.click();i++;show()});
+    const sk=$('#tSkip');if(sk)sk.onclick=()=>{closeOv('ovTest')}};
+  const finish=()=>{S[kind]=score;save();updatePass();
+    const msg=kind==='pre'?`You got <b>${score} / ${order.length}</b>. That's OK — it's before the museum! Let's explore and learn. 🚀`
+      :`You got <b>${score} / ${order.length}</b>!`+(S.pre!=null?` Before the museum you got <b>${S.pre}</b>. ${score>S.pre?`You improved by <b>${score-S.pre}</b>! 🎉`:'Great job!'}`:'');
+    B.innerHTML=`<h2>${kind==='pre'?'✅ Thank you!':'🏆 Final check done!'}</h2><div class="lina-row"><img src="${L(score>=5?'celebrate':'face_happy')}" alt=""><span>${msg}</span></div><p><button class="btn navy" id="tDone">${kind==='pre'?'Start exploring':'See my report code'}</button></p>`;
+    if(kind==='post'){SFX.fanfare();confetti()}
+    $('#tDone').onclick=()=>{closeOv('ovTest');if(kind==='post')showPass()}};
+  show();openOv('ovTest')}
+function reportCode(){const st=allStations();let m=0n;st.forEach((s,i)=>{if(S.done[s.id])m|=1n<<BigInt(i)});
+  const hx=m.toString(16).toUpperCase().padStart(Math.ceil(st.length/4),'0');let h=0;[1,2,3,4].forEach((n,i)=>{if(S.halls[n])h|=1<<i});
+  const body=hx+'-'+h.toString(16).toUpperCase()+(S.pre??'X')+(S.post??'X');let c=0;for(const ch of body)c=(c*7+ch.charCodeAt(0))%36;return body+'-'+c.toString(36).toUpperCase()}
+function decodeCode(code){code=(code||'').trim().toUpperCase().replace(/\s/g,'');const m=code.match(/^([0-9A-F]+)-([0-9A-F])([0-6X])([0-6X])-([0-9A-Z])$/);if(!m)return null;
+  const body=code.slice(0,code.lastIndexOf('-'));let c=0;for(const ch of body)c=(c*7+ch.charCodeAt(0))%36;if(c.toString(36).toUpperCase()!==m[5])return null;
+  const mask=BigInt('0x'+m[1]);const st=allStations();const perHall={1:0,2:0,3:0,4:0};let tot=0;st.forEach((s,i)=>{if(mask>>BigInt(i)&1n){tot++;perHall[s.id[1]]++}});
+  const h=parseInt(m[2],16);return{tot,perHall,badges:[1,2,3,4].filter((n,i)=>h>>i&1),pre:m[3]==='X'?null:+m[3],post:m[4]==='X'?null:+m[4]}}
+function classResults(){const ta=$('#crIn');try{localStorage.setItem('fossil-class',ta.value)}catch(e){}
+  const rows=ta.value.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const p=l.split(/[,\t;]+/);const code=p.pop();return{name:p.join(' ').trim()||'?',code,r:decodeCode(code)}});
+  if(!rows.length){$('#crOut').innerHTML='';return}
+  const ok=rows.filter(x=>x.r),avg=(f)=>{const v=ok.map(f).filter(x=>x!=null);return v.length?(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1):'–'};
+  $('#crOut').innerHTML=`<table><tr><th>Student</th><th>Stations (32)</th><th>H1</th><th>H2</th><th>H3</th><th>H4</th><th>Badges</th><th>Pre (6)</th><th>Post (6)</th><th>Gain</th></tr>${rows.map(x=>x.r?`<tr><td>${x.name.replace(/</g,'')}</td><td>${x.r.tot}</td>${[1,2,3,4].map(n=>`<td>${x.r.perHall[n]}/8</td>`).join('')}<td>${x.r.badges.map(n=>HALLS[n].icon).join(' ')}</td><td>${x.r.pre??'–'}</td><td>${x.r.post??'–'}</td><td>${x.r.pre!=null&&x.r.post!=null?(x.r.post-x.r.pre>0?'+':'')+(x.r.post-x.r.pre):'–'}</td></tr>`:`<tr><td>${x.name.replace(/</g,'')}</td><td colspan="9" style="color:#b33">⚠️ Code not valid — check it</td></tr>`).join('')}
+   <tr style="font-weight:800"><td>Class average (${ok.length})</td><td>${avg(x=>x.r.tot)}</td>${[1,2,3,4].map(n=>`<td>${avg(x=>x.r.perHall[n])}</td>`).join('')}<td></td><td>${avg(x=>x.r.pre)}</td><td>${avg(x=>x.r.post)}</td><td>${avg(x=>x.r.pre!=null&&x.r.post!=null?x.r.post-x.r.pre:null)}</td></tr></table>
+   <button class="btn navy" id="crCopy">📋 Copy table (paste into Excel)</button>`;
+  $('#crCopy').onclick=()=>{const t=[['Student','Stations','H1','H2','H3','H4','Badges','Pre','Post','Gain'].join('\t'),...ok.map(x=>[x.name,x.r.tot,...[1,2,3,4].map(n=>x.r.perHall[n]),x.r.badges.length,x.r.pre??'',x.r.post??'',x.r.pre!=null&&x.r.post!=null?x.r.post-x.r.pre:''].join('\t'))].join('\n');
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('✅ Copied! Paste it into Excel.'),()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('✅ Copied!')}catch(e){}a.remove()})}}
+
+// ===================== ARABIC GLOSSARY (tap a word) =====================
+const GLOSS={fossil:'حفرية / أحفورة',fossils:'حفريات / أحافير',remains:'بقايا',traces:'آثار',trace:'أثر',mold:'قالب (فراغ على شكل الكائن)',cast:'نموذج مصبوب',sediment:'رواسب',buried:'مدفون',minerals:'معادن',amber:'كهرمان',sap:'عصارة الشجر',tar:'قار / قطران',extinct:'منقرض',evidence:'دليل',claim:'ادعاء / رأي',infer:'يستنتج',paleontologist:'عالِم حفريات',paleontologists:'علماء الحفريات',paleontology:'علم الحفريات',layers:'طبقات',layer:'طبقة',era:'حقبة',eras:'حِقَب',environment:'بيئة',environments:'بيئات',climate:'مناخ',survive:'يبقى على قيد الحياة',organisms:'كائنات حية',organism:'كائن حي',ancient:'قديم جدًا',decay:'يتحلل',data:'بيانات',record:'سِجِل',argue:'يُجادل بالأدلة',desert:'صحراء',ocean:'محيط',index:'مُرشِد / دليلي',footprint:'أثر قدم',footprints:'آثار أقدام',skeleton:'هيكل عظمي',whale:'حوت',mammoth:'ماموث',trilobite:'ثلاثي الفصوص',ammonite:'أمونيت',fern:'سرخس',preserved:'محفوظ',identify:'يتعرّف على',protected:'محمي'};
+function glossify(root){if(!root)return;const re=new RegExp('\\b('+Object.keys(GLOSS).sort((a,b)=>b.length-a.length).join('|')+')\\b','gi');const seen=new Set();
+  const walk=n=>{if(n.nodeType===3){const t=n.nodeValue;re.lastIndex=0;if(!re.test(t))return;re.lastIndex=0;const frag=document.createDocumentFragment();let last=0,m;
+      while((m=re.exec(t))){const w=m[1].toLowerCase();if(seen.has(w))continue;seen.add(w);frag.appendChild(document.createTextNode(t.slice(last,m.index)));const sp=document.createElement('span');sp.className='gl';sp.dataset.w=w;sp.textContent=m[1];frag.appendChild(sp);last=m.index+m[1].length}
+      if(last){frag.appendChild(document.createTextNode(t.slice(last)));n.replaceWith(frag)}return}
+    if(n.nodeType===1&&!/^(BUTTON|SCRIPT|STYLE|INPUT|TEXTAREA|VIDEO|IMG)$/.test(n.tagName)&&!n.classList.contains('gl'))[...n.childNodes].forEach(walk)};walk(root)}
+document.addEventListener('click',e=>{const g=e.target.closest('.gl');document.querySelectorAll('.gl-tip').forEach(x=>x.remove());if(!g)return;e.stopPropagation();
+  const tip=document.createElement('div');tip.className='gl-tip';tip.innerHTML=`<b>${g.textContent}</b> <button class="say-sm">🔊</button><div dir="rtl">${GLOSS[g.dataset.w]}</div>`;document.body.appendChild(tip);
+  const r=g.getBoundingClientRect();tip.style.left=Math.max(8,Math.min(innerWidth-230,r.left))+'px';tip.style.top=(r.bottom+6)+'px';tip.querySelector('button').onclick=ev=>{ev.stopPropagation();talk(g.textContent)};talk(g.textContent)},true);
+
+const INQ={1:()=>openInquiry1(),2:()=>openInquiry2(),3:()=>openInquiry3(),4:()=>openInquiry4()};
+
+function sorter(root,items,bins,onDone){
+  const pool=root.querySelector('.pool'),fb=root.querySelector('.fb'),wrap=root.querySelector('.bins');let sel=null,left=items.length;
+  pool.innerHTML=items.map(it=>`<div class="chip" data-b="${it.b}">${it.img?`<img src="${it.img}" alt="">`:''}${it.label}</div>`).join('');
+  wrap.innerHTML=bins.map((b,i)=>`<div class="bin" data-b="${i}"><h4>${b}</h4><div class="chips"></div></div>`).join('');
+  pool.onclick=e=>{const c=e.target.closest('.chip');if(!c||c.classList.contains('ok'))return;SFX.click();pool.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');sel=c;fb.className='fb';fb.textContent='Now tap where it belongs.'};
+  wrap.onclick=e=>{const b=e.target.closest('.bin');if(!b||!sel)return;
+    if(sel.dataset.b===b.dataset.b){SFX.ok();sel.classList.remove('sel');sel.classList.add('ok');b.querySelector('.chips').appendChild(sel);sel=null;left--;fb.className='fb good';fb.textContent=left?'✅ Correct!':'🎉 All correct!';if(!left)onDone&&onDone()}
+    else{SFX.bad();const s=sel;s.classList.add('shake');setTimeout(()=>s.classList.remove('shake'),400);fb.className='fb badc';fb.textContent='❌ Not there. Think about the evidence!'}};
+}
+function openOldActivity(n){
+  const B=$('#actBody');const h=HALLS[n];
+  B.innerHTML=`<span class="pill" style="background:${h.color}">${h.sub}</span><h2>🎯 Activity</h2><div class="lina-row"><img src="${L('face_wink')}" alt=""><span>This hall is the next one we will upgrade! For now, answer its station questions to fill your passport.</span></div>`;
+  openOv('ovAct');
+}
+
+// ===================== PASSPORT / CERT / GALLERY / TEACHER =====================
+function showPass(){
+  $('#passBody').innerHTML=`<h2>🛂 ${S.name?S.name+"'s":'My'} Explorer Passport</h2>`+Object.entries(HALLS).map(([n,h])=>`<div class="hallblock"><h3>${h.icon} ${h.sub}: ${h.title} <span class="badge ${S.halls[n]?'got':''}" style="background:${h.color}">🏅 Badge</span></h3><div class="stamps">${h.stations.map(s=>`<div class="stamp ${S.done[s.id]?'got':''}"><img src="${s.img||(s.steps?s.steps[0][0]:TH(s.fossil))}" alt="">${s.n}. ${s.title}</div>`).join('')}</div></div>`).join('')+`<div class="report"><h3>📋 My report for the teacher</h3><p>Before: <b>${S.pre??'–'}</b>/6 · After: <b>${S.post??'–'}</b>/6</p><p>My code: <b class="rcode">${reportCode()}</b></p><p style="font-size:13px;color:#7a6a55">Write your name and this code on paper, or tell it to your teacher.</p></div><button class="btn navy" id="toCert">📜 My certificate</button> <button class="btn" id="toPost" style="background:#3f86b8;color:#fff">🎯 ${S.post!=null?'Do the final check again':'Final check (6 questions)'}</button>`;
+  $('#toCert').onclick=()=>{closeOv('ovPass');showCert()};$('#toPost').onclick=()=>{closeOv('ovPass');openTest('post')};openOv('ovPass');
+}
+function showCert(){const ids=Object.keys(HALLS).map(Number).filter(n=>!HALLS[n].old);const done=ids.filter(n=>HALLS[n].stations.every(s=>S.done[s.id])&&S.halls[n]);
+  const nxt=ids.find(n=>!done.includes(n));
+  $('#certBody').innerHTML=done.length?`<div class="cert"><div style="font-size:40px">🏆</div><h1>Fossil Expert</h1><p style="font-size:20px">This certificate is proudly given to</p><div class="nm">${S.name||'Fossil Explorer'}</div><p style="font-size:19px;max-width:560px;margin:14px auto">for completing ${done.map(n=>`<b>${HALLS[n].sub.split('· ')[1]}: ${HALLS[n].title}</b>`).reduce((acc,x,i,arr)=>acc+(i===0?'':i===arr.length-1?' and ':', ')+x,'')} and using <b>evidence</b> like a real paleontologist!</p><p>${new Date().toLocaleDateString('en-GB')}</p><img src="${L('celebrate')}" style="right:10px" alt=""><img src="${L('hold_fossil')}" style="left:10px" alt=""></div><p style="text-align:center">📸 Take a screenshot to keep it!${nxt?` Finish ${HALLS[nxt].sub.split(' ·')[0]} to add it to your certificate.`:''}</p>`
+  :`<h2>📜 Almost there!</h2><div class="lina-row"><img src="${L('face_wink')}" alt=""><span>Finish all <b>8 stations</b> and the <b>Inquiry Table</b> in a hall to get your certificate!</span></div>`;
+  if(done.length){SFX.fanfare();confetti()}openOv('ovCert')}
+$('#passBtn').onclick=showPass;const liteUI=()=>{$('#liteBtn').style.background=window.LITE?'#e08a3c':'';$('#liteBtn').title=window.LITE?'Lite mode ON (tap to turn off)':'Lite mode for slow devices (no wall videos)'};liteUI();$('#liteBtn').onclick=()=>{window.LITE=!window.LITE;try{localStorage.setItem('fossil-lite',window.LITE?'1':'0')}catch(e){}liteUI();toast(window.LITE?'⚡ Lite mode ON: no wall videos, faster on slow devices':'🎬 Full mode ON: wall videos are back')};$('#askBtn').onclick=openAsk;$('#askForm').onsubmit=e=>{e.preventDefault();sendAsk()};document.querySelectorAll('.ai-sugg button').forEach(b=>b.onclick=()=>sendAsk(b.textContent));initAI();
+$('#galBtn').onclick=()=>{$('#galGrid').innerHTML=Object.entries(FOSSILS).map(([k,f])=>`<div class="fcard" data-f="${k}"><img src="${TH(k)}" alt=""><b>${f.name}</b></div>`).join('');$('#galGrid').querySelectorAll('.fcard').forEach(c=>c.onclick=()=>{closeOv('ovGal');openFossil(c.dataset.f)});openOv('ovGal')};
+$('#teachBtn').onclick=()=>{openOv('ovTeach');try{const v=localStorage.getItem('fossil-class');if(v&&!$('#crIn').value)$('#crIn').value=v}catch(e){}$('#crIn').oninput=classResults;classResults()};
+$('#tg').innerHTML=`<h2>👩‍🏫 Teacher Guide</h2><div class="cr"><h3>📊 Class results</h3><p>Each student opens <b>🛂 Passport</b> and gives you a report code. Type one student per line: <code>Name, CODE</code> — the table builds itself. It is saved on this device only.</p><textarea id="crIn" rows="5" placeholder="Sara, FFFFFFFF-F36-K"></textarea><div id="crOut"></div></div>
+<p><b>Unit:</b> Topic 7 Fossil Evidence (Elevate Science, Grade 3) · <b>Standards:</b> 3-LS4-1, 3-LS4-3. Each <b>hall = one lesson</b>. Adam, a Grade 3 student guide, reads every text aloud (🔊).</p>
+<h3>Hall 1 · Lesson 1: Fossils (I can describe what a fossil is and some ways fossils form)</h3>
+<table><tr><th>#</th><th>Station</th><th>Content</th><th>Evidence question</th></tr>
+${HALLS[1].stations.map(s=>`<tr><td>${s.n}</td><td>${s.title}${s.fossil?' + 3D/AR '+FOSSILS[s.fossil].name:''}</td><td>${strip(s.text.join(' ')).slice(0,140)}…</td><td>${s.q.p}</td></tr>`).join('')}
+<tr><td>★</td><td>Inquiry Table</td><td>1) Order the 5 fossil-formation steps · 2) Sort fossils by how they formed (stone, print, resin, ice, tar) · 3) Claim + evidence: “Fossils can form anywhere?”</td><td>Hall badge</td></tr></table>
+<h3>Hall 2 · Lesson 2: Fossils as a Record (I can use fossil data to give evidence of organisms and environments from long ago)</h3>
+<table><tr><th>#</th><th>Station</th><th>Content</th><th>Evidence question</th></tr>
+${HALLS[2].stations.map(s=>`<tr><td>${s.n}</td><td>${s.title}${s.fossil?' + 3D/AR '+FOSSILS[s.fossil].name:''}</td><td>${strip(s.text.join(' ')).slice(0,140)}…</td><td>${s.q.p}</td></tr>`).join('')}
+<tr><td>★</td><td>Inquiry Table</td><td>1) Sort living things into Paleozoic / Mesozoic / Cenozoic · 2) Match organisms living today to similar fossils · 3) Claim + evidence: “This desert was always dry?”</td><td>Hall badge</td></tr></table>
+<p><b>Vocabulary (Lesson 2):</b> fossil record · data · era · index fossil · paleontologist.</p>
+<h3>Hall 3 · Lesson 3: Living Things and Climate Change (I can use fossil data to argue how some living things have responded to climate changes)</h3>
+<table><tr><th>#</th><th>Station</th><th>Content</th><th>Evidence question</th></tr>
+${HALLS[3].stations.map(s=>`<tr><td>${s.n}</td><td>${s.title}${s.fossil?' + 3D/AR '+FOSSILS[s.fossil].name:''}</td><td>${strip(s.text.join(' ')).slice(0,140)}…</td><td>${s.q.p}</td></tr>`).join('')}
+<tr><td>★</td><td>Inquiry Table</td><td>1) Sort fossils by the climate they lived in · 2) Sea becomes desert: who survives? · 3) Argument: “Climate change cannot cause extinction?”</td><td>Hall badge</td></tr></table>
+<p><b>Vocabulary (Lesson 3):</b> climate · argue · evidence · extinct · paleontology.</p>
+<h3>Hall 4 · Final Mystery: A Whale in the Desert?! (Wadi Al-Hitan, Egypt — uses evidence from Lessons 1–3)</h3>
+<table><tr><th>#</th><th>Station</th><th>Content</th><th>Evidence question</th></tr>
+${HALLS[4].stations.map(s=>`<tr><td>${s.n}</td><td>${s.title}${s.fossil?' + 3D/AR '+FOSSILS[s.fossil].name:''}</td><td>${strip(s.text.join(' ')).slice(0,140)}…</td><td>${s.q.p}</td></tr>`).join('')}
+<tr><td>★</td><td>Inquiry Table</td><td>1) Sort clues: evidence of an old sea / not evidence · 2) Order the 4-step story of the valley · 3) Final claim + evidence</td><td>Mystery badge</td></tr></table>
+<p><b>Suggested flow (≈35–40 min):</b> Open Hall 1 on the board → Adam's welcome → pairs follow stations 1–8 on tablets (or the class together on the board) → whole-class Inquiry Table → passport check as exit ticket.</p>
+<p><b>Vocabulary:</b> fossil · extinct · evidence · mold · cast · trace fossil · amber.</p>
+<p><b>Differentiation:</b> Support — read-aloud, picture steps, 3 answer choices. Challenge — explain why each sentence is (or is not) evidence; compare mold vs cast.</p>
+<p><button class="btn ghost" id="resetBtn">↺ Reset progress on this device</button></p>`;
+$('#resetBtn').onclick=()=>{['done','halls','acts','seenHall'].forEach(k=>S[k]={});save();updatePass();toast('Progress reset')};
+
+// ===================== INTRO =====================
+$('#introImg').src=L('wave');$('#loadImg').src=L('think');
+$('#nameIn').value=S.name||'';
+$('#introSay').onclick=()=>{ac();talk($('#introText').innerHTML)};
+$('#startBtn').onclick=()=>{ac();S.name=$('#nameIn').value.trim();save();$('#intro').classList.remove('on');window.__paused=false;SFX.whoosh();
+  lina(`Welcome${S.name?', <b>'+S.name+'</b>':''}! This is the museum lobby. Each door is one lesson. Let's start with <b>Hall 1: Fossils</b> — walk to the orange door or tap it!`,'point',true);
+  setTimeout(()=>$('#hint').style.opacity=0,9000);if(window.__startHall)window.APP3.goHall(window.__startHall);if(S.pre==null&&!window.__startHall)setTimeout(()=>openTest('pre'),900)};
+window.__paused=true;updatePass();
+window.APP={FOSSILS,HALLS,S,save,lina,talk,SFX,openStation,openFossil,openInquiry1,openInquiry2,INQ,hasVid,openOldActivity,modelURL,L,TH};
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+const A=window.APP;
+try{await Promise.race([Promise.all(['800','700','600'].map(w=>document.fonts.load(w+' 60px "Baloo 2"'))),new Promise(r=>setTimeout(r,2500))])}catch(e){}
+const cv=document.getElementById('c3d');
+let renderer;try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true})}catch(e){A.lina('3D is not available here. Use <b>🗂️ Gallery</b> to study the fossils!','think');throw e}
+renderer.setPixelRatio(window.LITE?1:Math.min(devicePixelRatio,2));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;renderer.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x1a120a);
+const pmrem=new THREE.PMREMGenerator(renderer);scene.environment=pmrem.fromScene(new RoomEnvironment(),0.04).texture;
+const cam=new THREE.PerspectiveCamera(62,1,0.05,120);
+const H=4.6;
+let world=new THREE.Group();scene.add(world);
+const texLoader=new THREE.TextureLoader();
+const loadTex=u=>new Promise(r=>texLoader.load(u,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;r(t)},undefined,()=>r(null)));
+function canvasTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');draw(x,w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
+// shared materials
+const floorTex=canvasTex(1024,1024,(x,w,h)=>{x.fillStyle='#a8784a';x.fillRect(0,0,w,h);const pw=w/6,ph=h/16;for(let r=0;r<16;r++)for(let c=-1;c<7;c++){const off=(r%3)*pw/3;x.fillStyle=`hsl(${26+Math.random()*6},${38+Math.random()*10}%,${34+Math.random()*12}%)`;x.fillRect(c*pw+off,r*ph,pw-2,ph-2);for(let k=0;k<6;k++){x.fillStyle=`rgba(50,28,10,${Math.random()*.12})`;x.fillRect(c*pw+off,r*ph+Math.random()*ph,pw,1)}}},[4,4]);
+const floorMat=new THREE.MeshStandardMaterial({map:floorTex,roughness:.38,metalness:.05});
+const ceilMat=new THREE.MeshStandardMaterial({color:0xf3eadb,roughness:.95});
+const woodMat=new THREE.MeshStandardMaterial({color:0x5b3a1f,roughness:.55});
+const goldMat=new THREE.MeshStandardMaterial({color:0xc9932c,metalness:.7,roughness:.3});
+const pedMat=new THREE.MeshStandardMaterial({color:0xf7f2e8,roughness:.35});
+const ropeMat=new THREE.MeshStandardMaterial({color:0x8e1b1b,roughness:.7});
+const lampMat=new THREE.MeshBasicMaterial({color:0xfff6dc});
+function wallMat(col){return new THREE.MeshStandardMaterial({map:canvasTex(256,256,(x,w,h)=>{x.fillStyle=col;x.fillRect(0,0,w,h);for(let i=0;i<1200;i++){x.fillStyle=`rgba(255,255,255,${Math.random()*.05})`;x.fillRect(Math.random()*w,Math.random()*h,2,2)}},[6,2]),roughness:.92})}
+const clickables=[],spinners=[];let floors=[],blockers=[],room=null,doors=[];
+function add(o){world.add(o);return o}
+function clearWorld(){VIDS.forEach(r=>{r.v.pause();r.v.removeAttribute('src');r.v.load();if(r.tex)r.tex.dispose()});VIDS.length=0;scene.remove(world);world.traverse(o=>{if(o.geometry)o.geometry.dispose()});world=new THREE.Group();scene.add(world);clickables.length=0;spinners.length=0;floors=[];blockers=[];doors=[]}
+function box(w,h,d,mat,x,y,z,ry=0){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.rotation.y=ry;return add(m)}
+// room with wainscot, baseboard, crown, coffered lights
+function buildRoom(W,D,col,doorGaps){
+  room={x0:-W/2,x1:W/2,z0:-D/2,z1:D/2};const wm=wallMat(col);
+  const fl=add(new THREE.Mesh(new THREE.PlaneGeometry(W,D),floorMat));fl.rotation.x=-Math.PI/2;floors.push(fl);
+  const ce=add(new THREE.Mesh(new THREE.PlaneGeometry(W,D),ceilMat));ce.rotation.x=Math.PI/2;ce.position.y=H;
+  const walls=[['n',0,-D/2,W,0],['s',0,D/2,W,Math.PI],['w',-W/2,0,D,Math.PI/2],['e',W/2,0,D,-Math.PI/2]];
+  for(const [k,x,z,len,ry] of walls){const gaps=(doorGaps[k]||[]).slice().sort((a,b)=>a[0]-b[0]);let segs=[],s=-len/2;for(const g of gaps){segs.push([s,g[0]]);s=g[1]}segs.push([s,len/2]);
+    for(const [a,b] of segs){if(b-a<.01)continue;const mid=(a+b)/2,l=b-a;const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry;add(g);
+      const w=new THREE.Mesh(new THREE.BoxGeometry(l,H,.3),wm);w.position.set(mid,H/2,.0);g.add(w);
+      const wain=new THREE.Mesh(new THREE.BoxGeometry(l,1.1,.06),woodMat);wain.position.set(mid,.55,.17);g.add(wain);
+      const rail=new THREE.Mesh(new THREE.BoxGeometry(l,.06,.1),goldMat);rail.position.set(mid,1.12,.19);g.add(rail);
+      const crown=new THREE.Mesh(new THREE.BoxGeometry(l,.18,.14),woodMat);crown.position.set(mid,H-.09,.2);g.add(crown)}
+    for(const gp of gaps){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry;add(g);const mid=(gp[0]+gp[1])/2,l=gp[1]-gp[0];const top=new THREE.Mesh(new THREE.BoxGeometry(l,H-3,.3),wm);top.position.set(mid,3+(H-3)/2,0);g.add(top);[gp[0],gp[1]].forEach(e=>{const p=new THREE.Mesh(new THREE.BoxGeometry(.25,3.1,.45),woodMat);p.position.set(e,1.55,0);g.add(p)});const lin=new THREE.Mesh(new THREE.BoxGeometry(l+.5,.25,.45),woodMat);lin.position.set(mid,3.1,0);g.add(lin)}}
+  for(let x=-W/2+2.5;x<W/2-1;x+=4)for(let z=-D/2+2.5;z<D/2-1;z+=4){const l=add(new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.05,24),lampMat));l.position.set(x,H-.03,z)}
+  add(new THREE.HemisphereLight(0xfff4e0,0x6a4a2a,1.15));const d=new THREE.DirectionalLight(0xffffff,.45);d.position.set(3,10,5);add(d);
+}
+function textTex(lines,w,h,bg,fg,sizes){return canvasTex(w,h,(x,W,Hh)=>{x.fillStyle=bg;x.beginPath();x.roundRect(0,0,W,Hh,Math.min(W,Hh)*.12);x.fill();x.fillStyle=fg;x.textAlign='center';x.textBaseline='middle';lines.forEach((l,i)=>{x.font=`${i?600:800} ${sizes[i]}px "Baloo 2", sans-serif`;x.fillText(l,W/2,Hh*(i+1)/(lines.length+1))})})}
+function plane(tex,w,h,basic=true){return new THREE.Mesh(new THREE.PlaneGeometry(w,h),basic?new THREE.MeshBasicMaterial({map:tex,transparent:true}):new THREE.MeshStandardMaterial({map:tex,roughness:.85}))}
+function onWall(obj,wall,along,y,off=.17){// wall: n,s,w,e ; along: coordinate along wall
+  const r=room;if(wall==='n'){obj.position.set(along,y,r.z0+off);obj.rotation.y=0}if(wall==='s'){obj.position.set(along,y,r.z1-off);obj.rotation.y=Math.PI}if(wall==='w'){obj.position.set(r.x0+off,y,along);obj.rotation.y=Math.PI/2}if(wall==='e'){obj.position.set(r.x1-off,y,along);obj.rotation.y=-Math.PI/2}return obj}
+function inFront(wall,along,dist){const r=room;return wall==='n'?[along,r.z0+dist]:wall==='s'?[along,r.z1-dist]:wall==='w'?[r.x0+dist,along]:[r.x1-dist,along]}
+const VIDS=[],_wp=new THREE.Vector3();
+function vidFor(mesh,name){const v=document.createElement('video');v.muted=true;v.loop=true;v.playsInline=true;v.setAttribute('playsinline','');v.setAttribute('muted','');v.preload='none';VIDS.push({v,mesh,src:name.includes('/')?name:'assets/h1v/'+name+'.mp4',tex:null,on:false,fail:0})}
+function updVids(){if(window.LITE){for(const r of VIDS)if(r.on){r.on=false;r.v.pause()}return}for(const r of VIDS){if(r.fail>2)continue;r.mesh.getWorldPosition(_wp);const near=!window.__paused&&Math.hypot(_wp.x-P.x,_wp.z-P.z)<8;if(near&&!r.on){r.on=true;if(!r.v.src)r.v.src=r.src;r.v.play().then(()=>{const swap=()=>{if(!r.on||r.swapped)return;r.swapped=1;if(!r.tex){r.tex=new THREE.VideoTexture(r.v);r.tex.colorSpace=THREE.SRGBColorSpace}const m=r.mesh.material;m.map=m.emissiveMap=r.tex;m.needsUpdate=true};if(r.v.readyState>=2&&r.v.currentTime>0)swap();else if(r.v.requestVideoFrameCallback)r.v.requestVideoFrameCallback(()=>swap());else r.v.addEventListener('timeupdate',swap,{once:true})}).catch(()=>{r.on=false;r.fail++})}else if(!near&&r.on){r.on=false;r.v.pause()}}}
+function framedPicture(tex,w,h,wall,along,y,data,vname){const g=new THREE.Group();const fr=new THREE.Mesh(new THREE.BoxGeometry(w+.24,h+.24,.08),goldMat);g.add(fr);const inner=new THREE.Mesh(new THREE.BoxGeometry(w+.08,h+.08,.09),woodMat);g.add(inner);const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:tex,roughness:.6,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:.18}));p.position.z=.05;g.add(p);onWall(g,wall,along,y,.2);add(g);if(vname)vidFor(p,vname);if(data){p.userData=data;clickables.push(p)}
+  const [lx,lz]=inFront(wall,along,1.6);const sl=new THREE.SpotLight(0xfff2d6,40,9,Math.PI/6,.5,1.6);sl.position.set(lx,H-.15,lz);const t=new THREE.Object3D();t.position.copy(g.position);add(t);sl.target=t;add(sl);return g}
+function plaque(st,color,wall,along,y){const t1=String(st.n)+'  ·  '+st.title;const tex=textTex([t1,'Tap to explore'],1024,220,color,'#fff',[Math.min(96,Math.floor(1700/t1.length)),52]);const p=plane(tex,2.3,.5);onWall(p,wall,along,y,.24);add(p);p.userData={type:'st',st};clickables.push(p)}
+function floorNum(n,x,z,color){const tex=canvasTex(256,256,(c,W,Hh)=>{c.fillStyle=color;c.beginPath();c.arc(W/2,Hh/2,W/2-6,0,7);c.fill();c.lineWidth=10;c.strokeStyle='#fff';c.stroke();c.fillStyle='#fff';c.font='800 150px "Baloo 2"';c.textAlign='center';c.textBaseline='middle';c.fillText(n,W/2,Hh/2+10)});const m=add(new THREE.Mesh(new THREE.CircleGeometry(.42,40),new THREE.MeshBasicMaterial({map:tex,transparent:true})));m.rotation.x=-Math.PI/2;m.position.set(x,.012,z)}
+function stanchions(wall,along,width,dist){const pts=[-width/2,width/2].map(o=>{const [x,z]=wall==='n'||wall==='s'?inFront(wall,along+o,dist):inFront(wall,along+o,dist);return wall==='n'||wall==='s'?[along+o,z]:[x,along+o]});
+  pts.forEach(([x,z])=>{const p=add(new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,.95,12),goldMat));p.position.set(x,.475,z);const b=add(new THREE.Mesh(new THREE.CylinderGeometry(.16,.18,.05,20),goldMat));b.position.set(x,.025,z);const t=add(new THREE.Mesh(new THREE.SphereGeometry(.06,12,8),goldMat));t.position.set(x,.97,z)});
+  const [a,b]=pts;const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(a[0],.9,a[1]),new THREE.Vector3((a[0]+b[0])/2,.62,(a[1]+b[1])/2),new THREE.Vector3(b[0],.9,b[1]));add(new THREE.Mesh(new THREE.TubeGeometry(curve,20,.025,8),ropeMat));
+  blockers.push({x:(a[0]+b[0])/2,z:(a[1]+b[1])/2,r:Math.max(Math.abs(a[0]-b[0]),Math.abs(a[1]-b[1]))/2+.2,line:[a,b]})}
+function pedestal(x,z,color,data){const g=new THREE.Group();const base=new THREE.Mesh(new THREE.CylinderGeometry(.55,.62,1,40),pedMat);base.position.y=.5;g.add(base);const ring=new THREE.Mesh(new THREE.TorusGeometry(.55,.025,8,60),goldMat);ring.rotation.x=Math.PI/2;ring.position.y=1;g.add(ring);
+  const glass=new THREE.Mesh(new THREE.CylinderGeometry(.56,.56,.02,40),new THREE.MeshBasicMaterial({color:new THREE.Color(color),transparent:true,opacity:.35}));glass.position.y=1.01;g.add(glass);g.position.set(x,0,z);add(g);base.userData=data;clickables.push(base);blockers.push({x,z,r:.85});
+  const sl=new THREE.SpotLight(0xffffff,30,7,Math.PI/9,.4,1.5);sl.position.set(x,H-.1,z);const t=new THREE.Object3D();t.position.set(x,1,z);add(t);sl.target=t;add(sl);return g}
+
+const woodDark=new THREE.MeshStandardMaterial({color:0x4a3220,roughness:.55});
+const glassMat=new THREE.MeshPhysicalMaterial({color:0xffffff,transparent:true,opacity:.14,roughness:.05,metalness:0,side:THREE.DoubleSide,depthWrite:false});
+const WALLYAW={w:Math.PI/2,e:-Math.PI/2,n:0,s:Math.PI};
+// museum vitrine: wooden base + glass box + sloped name plate; local x = along the wall, local z = out from the wall
+function vitrine(x,z,yaw,wid,dep,color,data,name){const g=new THREE.Group();const bh=.9,gh=.62;
+  const base=new THREE.Mesh(new THREE.BoxGeometry(wid,bh,dep),woodDark);base.position.y=bh/2;g.add(base);
+  const trim=new THREE.Mesh(new THREE.BoxGeometry(wid+.04,.05,dep+.04),goldMat);trim.position.y=bh;g.add(trim);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(wid-.04,.02,dep-.04),new THREE.MeshStandardMaterial({color:new THREE.Color(color).lerp(new THREE.Color(0xffffff),.55),roughness:.6}));top.position.y=bh+.03;g.add(top);
+  const gl=new THREE.Mesh(new THREE.BoxGeometry(wid-.02,gh,dep-.02),glassMat);gl.position.y=bh+.04+gh/2;gl.renderOrder=2;g.add(gl);
+  const edges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(wid-.02,gh,dep-.02)),new THREE.LineBasicMaterial({color:0xd8b25a}));edges.position.copy(gl.position);g.add(edges);
+  const pl=plane(textTex([name],700,150,color,'#fff',[name.length>16?58:70]),Math.min(wid-.1,1.1),.24);pl.position.set(0,bh-.2,dep/2+.006);g.add(pl);
+  g.position.set(x,0,z);g.rotation.y=yaw;add(g);base.userData=gl.userData=pl.userData=data;clickables.push(base,gl,pl);
+  const R=Math.max(wid,dep)/2+.35;blockers.push({x,z,r:R});
+  const sl=new THREE.SpotLight(0xfff2d8,26,6,Math.PI/10,.45,1.5);sl.position.set(x,H-.1,z);const t=new THREE.Object3D();t.position.set(x,bh,z);add(t);sl.target=t;add(sl);return g}
+const loader=new GLTFLoader();
+async function placeFossil(k,x,z,rotY=0,y=1.03,maxS=0){const url=await A.modelURL(k);return new Promise(res=>loader.load(url,g=>{const o=g.scene;const bx=new THREE.Box3().setFromObject(o),sz=bx.getSize(new THREE.Vector3());let s=A.FOSSILS[k].disp/Math.max(sz.x,sz.y,sz.z);if(maxS){const hz=k==='whale'?null:Math.hypot(sz.x,sz.z);s=Math.min(s,maxS.h/sz.y,hz?Math.min(maxS.x,maxS.z)/hz:Math.min(maxS.x/sz.x,maxS.z/sz.z))}o.scale.setScalar(s);const b2=new THREE.Box3().setFromObject(o),c=b2.getCenter(new THREE.Vector3());o.position.sub(new THREE.Vector3(c.x,b2.min.y,c.z));const h=new THREE.Group();h.add(o);h.position.set(x,y,z);h.rotation.y=rotY;add(h);o.traverse(m=>{if(m.isMesh){m.userData={type:'fossil',k};clickables.push(m)}});if(k!=='whale')spinners.push(h);res(h)},undefined,()=>res(null)))}
+function linaStandee(x,z,pose,data){const tex=texLoader.load(A.L(pose));tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));const im=new Image();const SH=1.05;im.onload=()=>sp.scale.set(SH*im.width/im.height,SH,1);im.src=A.L(pose);sp.scale.set(.45,SH,1);sp.position.set(x,.32+SH/2,z);add(sp);sp.userData=data;clickables.push(sp);const pod=new THREE.Mesh(new THREE.CylinderGeometry(.42,.48,.66,36),woodMat);pod.position.set(x,.33,z);add(pod);const rg=new THREE.Mesh(new THREE.TorusGeometry(.42,.03,8,40),goldMat);rg.rotation.x=Math.PI/2;rg.position.set(x,.66,z);add(rg);pod.userData=data;clickables.push(pod);blockers.push({x,z,r:.6})}
+function label(text,x,y,z,color){const t=textTex([text],640,140,color,'#fff',[72]);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t}));s.scale.set(1.7,.37,1);s.position.set(x,y,z);add(s);return s}
+function doorSign(lines,color,wall,along){const t=textTex(lines,1024,300,color,'#fff',[110,62]);const p=plane(t,2.6,.76);onWall(p,wall,along,3.75,.2);add(p);return p}
+
+// ===================== PLAYER =====================
+const P={x:0,z:0,yaw:0,pitch:-.06};window.__P=P;let target=null;const keys={};
+function free(x,z){const r=room;if(!(x>r.x0+.45&&x<r.x1-.45&&z>r.z0+.45&&z<r.z1-.45))return false;for(const b of blockers){if(b.line){const [a,c]=b.line;const dx=c[0]-a[0],dz=c[1]-a[1],L2=dx*dx+dz*dz;let t=((x-a[0])*dx+(z-a[1])*dz)/L2;t=Math.max(0,Math.min(1,t));if(Math.hypot(x-(a[0]+t*dx),z-(a[1]+t*dz))<.35)return false}else if(Math.hypot(x-b.x,z-b.z)<b.r)return false}return true}
+function move(dx,dz){const nx=P.x+dx,nz=P.z+dz;if(free(nx,nz)){P.x=nx;P.z=nz}else if(free(nx,P.z))P.x=nx;else if(free(P.x,nz))P.z=nz}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;keys[e.key.toLowerCase()]=1});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+document.querySelectorAll('#pad button').forEach(b=>{const k=b.dataset.k;const on=e=>{e.preventDefault();keys['pad'+k]=1;b.classList.add('on')},off=()=>{keys['pad'+k]=0;b.classList.remove('on')};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off)});
+let drag=null;
+cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,yaw:P.yaw,pitch:P.pitch,moved:0}});
+addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved=Math.max(drag.moved,Math.abs(dx)+Math.abs(dy));P.yaw=drag.yaw+dx*.0035;P.pitch=Math.max(-.6,Math.min(.45,drag.pitch+dy*.003))});
+addEventListener('pointerup',e=>{if(drag&&drag.moved<6&&e.target===cv)pick(e);drag=null});
+const ray=new THREE.Raycaster(),mv=new THREE.Vector2();
+function pick(e){if(window.__paused)return;const r=cv.getBoundingClientRect();mv.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mv,cam);
+  const hit=ray.intersectObjects(clickables,false)[0];
+  if(hit&&hit.distance<16){const u=hit.object.userData;
+    if(u.type==='st')A.openStation(u.st,curHall);else if(u.type==='fossil')openFossilStation(u.k);else if(u.type==='act')(A.INQ[curHall]?A.INQ[curHall]():A.openOldActivity(curHall));else if(u.type==='door')goHall(u.n);else if(u.type==='lobby')goHall(0);else if(u.type==='lina')A.lina(curHall?A.HALLS[curHall].intro:'Each door is one lesson. Start with <b>Hall 1</b>!','think',true);return}
+  const fh=ray.intersectObjects(floors,false)[0];if(fh)target={x:fh.point.x,z:fh.point.z}}
+function openFossilStation(k){A.openFossil(k)}
+
+// ===================== SCENES =====================
+let curHall=-1;
+async function buildLobby(){
+  buildRoom(14,14,'#efe2c9',{n:[[-1.4,1.4]],w:[[-1.4,1.4]],e:[[-1.4,1.4]],s:[[-1.4,1.4]]});
+  const HS=A.HALLS;const spots={1:['n',0],2:['e',0],3:['w',0],4:['s',0]};
+  for(const n of [1,2,3,4]){const [w,a]=spots[n];doorSign([HS[n].icon+'  '+(n===4?'Final Mystery':'Hall '+n),HS[n].title],HS[n].color,w,a);
+    const dp=new THREE.Mesh(new THREE.PlaneGeometry(2.8,3),new THREE.MeshBasicMaterial({color:new THREE.Color(HS[n].color),transparent:true,opacity:.55}));onWall(dp,w,a,1.5,.05);add(dp);dp.userData={type:'door',n};clickables.push(dp);
+    const [fx,fz]=inFront(w,a,1.1);doors.push({x:fx,z:fz,n});floorNum(n===4?'★':n,fx,fz,HS[n].color)}
+  // center emblem
+  const em=add(new THREE.Mesh(new THREE.CircleGeometry(2.2,64),new THREE.MeshStandardMaterial({map:canvasTex(512,512,(c,W)=>{c.fillStyle='#3a2a1a';c.beginPath();c.arc(W/2,W/2,W/2-4,0,7);c.fill();c.strokeStyle='#c9932c';c.lineWidth=14;c.stroke();c.strokeStyle='#f2c46b';c.lineWidth=12;c.beginPath();for(let t=0;t<16;t+=.08){const r=W*.36*Math.exp(-t*.19);c.lineTo(W/2+Math.cos(t)*r,W/2+Math.sin(t)*r)}c.stroke()}),roughness:.4})));em.rotation.x=-Math.PI/2;em.position.y=.011;
+  linaStandee(-3,-1.5,'wave',{type:'lina'});
+  const sign=plane(textTex(['Fossil Evidence Museum','Each hall = one lesson'],1024,260,'#2f2114','#f2a71b',[100,56]),3.4,.86);sign.position.set(4.6,2.9,-6.83);add(sign);
+  P.x=0;P.z=4.5;P.yaw=0;
+}
+async function buildLessonHall(n){
+  const h=A.HALLS[n];const W=16,D=24;buildRoom(W,D,h.wall,{s:[[-1.4,1.4]]});
+  const st=h.stations;const pics=await Promise.all(st.map(s=>loadTex(s.img||s.steps[0][0])));
+  const sst=st.find(s=>s.steps);const stepTex=sst?await Promise.all(sst.steps.slice(1).map(x=>loadTex(x[0]))):[];
+  const prog=v=>document.getElementById('loadbar').style.width=v+'%';prog(40);
+  const C=h.color;
+  // layout: [wall, along, station index, fossil?]
+  const L=[['w',7,0],['w',-.5,1],['w',-8,2],['n',-4,3],['n',4,4],['e',-8,5],['e',-.5,6],['e',7,7]];
+  for(const [w,a,i] of L){const s=st[i];
+    if(s.steps){// wide step strip
+      const all=[pics[i],...stepTex],K=all.length,fw=Math.min(2.05,7.4/K-.12),sp=fw+.12,half=(K-1)/2*sp;all.forEach((t,j)=>{framedPicture(t,fw,fw*.75,w,w==='w'||w==='s'?a+half-j*sp:a-half+j*sp,2.35,{type:'st',st:s},A.hasVid(s.steps[j][0])?VID(s.steps[j][0]):null)});
+      const ar=plane(canvasTex(512,64,(c,W2,H2)=>{c.fillStyle='#7a5a3a';c.font='800 48px "Baloo 2"';c.textAlign='center';c.textBaseline='middle';c.fillText(s.steps.map((x,j)=>j+1).join(' ➜ '),W2/2,H2/2)}),3,.38);onWall(ar,w,a,3.35,.22);add(ar);
+    }else framedPicture(pics[i],2.9,1.63,w,a,2.4,{type:'st',st:s},A.hasVid(s.img)?VID(s.img):null);
+    plaque(s,C,w,a,1.32);
+    const [fx,fz]=inFront(w,a,2.6);floorNum(s.n,fx,fz,C);
+    stanchions(w,a,s.steps?7.6:3.0,.95);
+    if(s.fossil){const F=A.FOSSILS[s.fossil];const wid=Math.max(.8,Math.min(F.disp+.25,2.3)),dep=Math.max(.7,Math.min(F.disp*.55+.2,1.05));
+      // always on the visitor's RIGHT of the picture, flush against the wall
+      const right=(w==='w'||w==='s')?-1:1;const side=(w==='n'||w==='s')?(a<0?1:-1):(Math.abs(a)<2?right:Math.sign(a));const pw=s.steps?3.8:1.55;const along=a+side*(pw+.3+wid/2);
+      const [qx,qz]=inFront(w,along,dep/2+.12);const yaw=WALLYAW[w];
+      vitrine(qx,qz,yaw,wid,dep,C,{type:'fossil',k:s.fossil},F.name);placeFossil(s.fossil,qx,qz,yaw,.95,{x:wid-.12,z:dep-.12,h:.56})}
+    prog(40+i*7)}
+  // inquiry table
+  const tg=new THREE.Group();const desk=new THREE.Mesh(new THREE.CylinderGeometry(1.3,1.3,.95,40),woodMat);desk.position.y=.475;tg.add(desk);const top=new THREE.Mesh(new THREE.CylinderGeometry(1.38,1.38,.06,40),goldMat);top.position.y=.97;tg.add(top);
+  const scr=new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.2),new THREE.MeshBasicMaterial({map:textTex(['🔬 Inquiry Table','Be a scientist! Tap here'],1024,560,'#1f2a4d','#fff',[120,64]),side:THREE.DoubleSide}));scr.position.set(0,1.85,0);tg.add(scr);
+  tg.position.set(0,0,-2.5);add(tg);desk.userData=scr.userData={type:'act'};clickables.push(desk,scr);blockers.push({x:0,z:-2.5,r:1.7});
+  const pl=new THREE.PointLight(0xffd27a,8,6);pl.position.set(0,3,-2.5);add(pl);
+  // banner over entrance (inside)
+  const ban=plane(textTex(h.banner,1400,300,C,'#fff',[Math.min(96,Math.floor(2600/h.banner[0].length)),Math.min(50,Math.floor(2700/h.banner[1].length))]),5.6,1.2);onWall(ban,'n',0,3.9,.2);add(ban);
+  // exit
+  const ex=new THREE.Mesh(new THREE.PlaneGeometry(2.8,3),new THREE.MeshBasicMaterial({color:0x6b4a2c,transparent:true,opacity:.5}));onWall(ex,'s',0,1.5,.05);add(ex);ex.userData={type:'lobby'};clickables.push(ex);
+  const exs=plane(textTex(['🏛️ Back to Lobby'],800,180,'#6b4a2c','#fff',[90]),2.2,.5);onWall(exs,'s',0,3.6,.2);add(exs);
+  linaStandee(2.6,9.2,h.pose||'point',{type:'lina'});
+  P.x=0;P.z=10.6;P.yaw=0;P.pitch=-.05;prog(100);
+}
+async function buildOldHall(n){
+  const h=A.HALLS[n];buildRoom(12,14,h.wall,{s:[[-1.4,1.4]]});
+  const ban=plane(textTex([h.icon+' '+h.sub+': '+h.title,'Coming next: full upgrade'],1400,300,h.color,'#fff',[90,52]),5.6,1.2);onWall(ban,'n',0,3.2,.2);add(ban);
+  h.stations.forEach((s,i)=>{const x=h.stations.length===1?0:(i?2.6:-2.6),z=-2;pedestal(x,z,h.color,{type:'fossil',k:s.fossil});label(A.FOSSILS[s.fossil].name,x,2.25,z,h.color);placeFossil(s.fossil,x,z,n===4?Math.PI/2:0);floorNum(s.n,x,z+1.5,h.color)});
+  const ex=new THREE.Mesh(new THREE.PlaneGeometry(2.8,3),new THREE.MeshBasicMaterial({color:0x6b4a2c,transparent:true,opacity:.5}));onWall(ex,'s',0,1.5,.05);add(ex);ex.userData={type:'lobby'};clickables.push(ex);
+  linaStandee(2.6,4.6,'think',{type:'lina'});P.x=0;P.z=5.4;P.yaw=0;
+}
+async function goHall(n){
+  if(n===curHall)return;window.__paused=true;const ld=document.getElementById('loading');document.getElementById('loadbar').style.width='10%';document.getElementById('loadTxt').textContent=n?('Opening '+A.HALLS[n].sub+'…'):'Back to the lobby…';ld.classList.add('on');A.SFX.whoosh();
+  clearWorld();curHall=n;target=null;
+  if(n===0)await buildLobby();else if(!A.HALLS[n].old)await buildLessonHall(n);else await buildOldHall(n);
+  document.getElementById('where').textContent=n?A.HALLS[n].icon+' '+A.HALLS[n].sub:'🏛️ Lobby';document.getElementById('lobbyBtn').style.display=n?'':'none';
+  ld.classList.remove('on');if(![...document.querySelectorAll('.ov.on')].length)window.__paused=false;
+  if(n){const h=A.HALLS[n];const el=document.getElementById('hallname');el.querySelector('small').textContent=h.sub;el.querySelector('b').textContent=h.icon+' '+h.title;el.classList.add('on');setTimeout(()=>el.classList.remove('on'),2200);const first=!A.S.seenHall[n];A.S.seenHall[n]=1;A.save();A.lina(h.intro,'point',first)}
+  try{history.replaceState(null,'',n?'#hall-'+n:'#lobby')}catch(e){}
+}
+document.getElementById('lobbyBtn').onclick=()=>goHall(0);
+window.APP3={goHall};
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
+const clock=new THREE.Clock();
+let vT=0;function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05);if((vT+=dt)>.5){vT=0;updVids()}
+  if(!window.__paused&&room){const sp=3*dt,tr=1.7*dt;const fw=(keys.w||keys.arrowup||keys.padf?1:0)-(keys.s||keys.arrowdown||keys.padb?1:0);const turn=(keys.a||keys.arrowleft||keys.padl?1:0)-(keys.d||keys.arrowright||keys.padr?1:0);
+    P.yaw+=turn*tr;if(fw){target=null;move(-Math.sin(P.yaw)*sp*fw,-Math.cos(P.yaw)*sp*fw)}
+    if(target){const dx=target.x-P.x,dz=target.z-P.z,d=Math.hypot(dx,dz);if(d<.15)target=null;else{const want=Math.atan2(-dx,-dz);let df=want-P.yaw;df=Math.atan2(Math.sin(df),Math.cos(df));P.yaw+=df*Math.min(1,dt*5);const ox=P.x,oz=P.z;move(dx/d*sp,dz/d*sp);if(Math.abs(P.x-ox)+Math.abs(P.z-oz)<1e-4)target=null}}
+    if(curHall===0)for(const d of doors)if(Math.hypot(P.x-d.x,P.z-d.z)<.7){goHall(d.n);break}
+    if(curHall>0&&P.z>room.z1-.75&&Math.abs(P.x)<1.2)goHall(0)}
+  cam.position.set(P.x,1.6,P.z);cam.rotation.set(P.pitch,P.yaw,0,'YXZ');spinners.forEach(s=>s.rotation.y+=dt*.35);renderer.render(scene,cam)}
+loop();
+const h0=(location.hash.match(/hall-(\d)/)||[])[1];
+await goHall(0);if(h0)window.__startHall=+h0;
+</script>
+</body>
+</html>
