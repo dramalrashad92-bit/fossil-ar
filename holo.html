@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark only">
+<title>Fossil Hologram</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:system-ui,"Segoe UI",sans-serif;color:#fff;touch-action:none}
+canvas{display:block;position:fixed;inset:0}
+#ui{position:fixed;left:0;right:0;bottom:0;padding:10px;background:linear-gradient(transparent,rgba(0,0,0,.85) 30%);transition:opacity .4s;text-align:center}
+#ui.hide{opacity:0;pointer-events:none}
+.row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0}
+button{border:0;border-radius:999px;padding:8px 12px;font-weight:700;font-size:14px;background:#3a2a18;color:#fff7e8}
+button.on{background:#d2691e}
+label{font-size:13px;color:#cdb38f}
+#tip{position:fixed;top:8px;left:0;right:0;text-align:center;font-size:13px;color:#8a7a66;transition:opacity .4s}
+#tip.hide{opacity:0}
+</style></head><body>
+<div id="tip">Tap the screen to hide / show the buttons</div>
+<div id="ui">
+  <div class="row" id="pick"></div>
+  <div class="row">
+    <label>Size <input type="range" id="sz" min="0.5" max="1.6" step="0.05" value="1"></label>
+    <label>Gap <input type="range" id="gap" min="0" max="0.25" step="0.01" value="0.06"></label>
+  </div>
+  <div class="row">
+    <button id="spin" class="on">🔄 Spin</button>
+    <button id="cross">➕ Center mark</button>
+    <button id="full">⛶ Full screen</button>
+    <button id="go">▶ Start hologram</button>
+  </div>
+</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const F={ammonite:"Ammonite",trilobite:"Trilobite",footprint:"Dinosaur Footprint",amber:"Insect in Amber",shark:"Shark Tooth",fern:"Fern Leaf Print",mammoth:"Mammoth Tooth",whale:"Ancient Whale Skull"};
+const IC={ammonite:"🐚",trilobite:"🪲",footprint:"🦶",amber:"🟠",shark:"🦈",fern:"🌿",mammoth:"🦣",whale:"🐋"};
+// tilt so flat fossils face the viewer
+const TILT={footprint:-Math.PI/2.4,trilobite:-Math.PI/2.4,fern:0,ammonite:0};
+let cur=new URLSearchParams(location.search).get('k');if(!F[cur])cur='ammonite';
+const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.outputColorSpace=THREE.SRGBColorSpace;
+document.body.prepend(R.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0);
+scene.add(new THREE.HemisphereLight(0xffffff,0x443322,2.2));
+const d1=new THREE.DirectionalLight(0xffffff,2.2);d1.position.set(2,3,2);scene.add(d1);
+const d2=new THREE.DirectionalLight(0xffeedd,1.2);d2.position.set(-2,1,-2);scene.add(d2);
+const holder=new THREE.Group();scene.add(holder);
+// 4 cameras: front (bottom slot), right, back (top), left
+const cams=[0,1,2,3].map(()=>new THREE.PerspectiveCamera(30,1,.01,100));
+const loader=new GLTFLoader();const cache={};
+function load(k){
+  cur=k;[...document.querySelectorAll('#pick button')].forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  const put=g=>{holder.clear();const o=g.clone(true);const b=new THREE.Box3().setFromObject(o),s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());
+    const piv=new THREE.Group();o.position.sub(c);piv.add(o);piv.rotation.x=TILT[k]||0;
+    const b2=new THREE.Box3().setFromObject(piv),s2=b2.getSize(new THREE.Vector3());piv.scale.setScalar(1/Math.max(s2.x,s2.y,s2.z));holder.add(piv)};
+  if(cache[k])return put(cache[k]);
+  loader.load('models/'+k+'.glb',g=>{cache[k]=g.scene;put(g.scene)});
+}
+const pick=document.getElementById('pick');
+pick.innerHTML=Object.keys(F).map(k=>`<button data-k="${k}">${IC[k]} ${F[k]}</button>`).join('');
+pick.onclick=e=>{const b=e.target.closest('button');if(b)load(b.dataset.k)};
+let spin=true,cross=false,size=1,gap=.06;
+const $=id=>document.getElementById(id);
+$('spin').onclick=()=>{spin=!spin;$('spin').classList.toggle('on',spin)};
+$('cross').onclick=()=>{cross=!cross;$('cross').classList.toggle('on',cross)};
+$('sz').oninput=e=>size=+e.target.value;$('gap').oninput=e=>gap=+e.target.value;
+$('full').onclick=()=>{const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el)};
+const ui=$('ui'),tip=$('tip');
+$('go').onclick=e=>{e.stopPropagation();$('full').onclick();ui.classList.add('hide');tip.classList.add('hide')};
+R.domElement.addEventListener('click',()=>{ui.classList.toggle('hide');tip.classList.toggle('hide')});
+try{if(localStorage.getItem('holo-sz'))size=+localStorage.getItem('holo-sz')}catch(e){}
+$('sz').value=size;$('sz').addEventListener('change',()=>{try{localStorage.setItem('holo-sz',size)}catch(e){}});
+// cross mark
+const markC=document.createElement('canvas');
+function frame(t){
+  requestAnimationFrame(frame);
+  const W=innerWidth,H=innerHeight;R.setSize(W,H,false);R.domElement.style.width=W+'px';R.domElement.style.height=H+'px';
+  if(spin)holder.rotation.y+=0.008;
+  const S=Math.min(W,H)*size*0.98,v=S/3,cx=W/2,cy=H/2,g=S*gap;
+  R.setScissorTest(false);R.setClearColor(0);R.clear();R.setScissorTest(true);
+  // slots: [x,y (top-left, css px), roll]
+  const slots=[
+    [cx-v/2, cy+g,        Math.PI],      // bottom slot: image bottom points to center
+    [cx+g,   cy-v/2,     -Math.PI/2],    // right slot
+    [cx-v/2, cy-g-v,      0],            // top slot
+    [cx-g-v, cy-v/2,      Math.PI/2]     // left slot
+  ];
+  slots.forEach(([x,y,roll],i)=>{
+    const cam=cams[i],a=i*Math.PI/2,dist=2.05;
+    cam.position.set(Math.sin(a)*dist,0.25,Math.cos(a)*dist);cam.up.set(0,1,0);cam.lookAt(0,0,0);cam.rotateZ(roll);
+    cam.aspect=1;cam.updateProjectionMatrix();
+    const vy=H-(y+v);R.setViewport(x,vy,v,v);R.setScissor(x,vy,v,v);R.render(scene,cam);
+  });
+  R.setScissorTest(false);
+  if(cross){R.setScissorTest(true);const c=new THREE.Color(0x553311);R.setClearColor(c);R.setScissor(cx-1,cy-12,2,24);R.clear();R.setScissor(cx-12,cy-1,24,2);R.clear();R.setClearColor(0);R.setScissorTest(false)}
+}
+load(cur);requestAnimationFrame(frame);
+</script></body></html>
