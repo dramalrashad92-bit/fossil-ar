@@ -14,7 +14,15 @@ button.on{background:#d2691e}
 label{font-size:13px;color:#cdb38f}
 #tip{position:fixed;top:8px;left:0;right:0;text-align:center;font-size:13px;color:#8a7a66;transition:opacity .4s}
 #tip.hide{opacity:0}
+#intro{position:fixed;inset:0;z-index:20;background:#140d06;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px}
+#intro video{width:100%;max-width:960px;max-height:72vh;border-radius:14px;background:#000}
+#intro h2{margin:6px 0 10px;font-size:20px;color:#ffd9a0;text-align:center}
+#intro .row button{font-size:17px;padding:12px 20px}
+#intro.hide{display:none}
 </style></head><body>
+<div id="intro"><h2>How to make your hologram 🔺</h2>
+<video id="hv" src="holo_howto.mp4" poster="holo_poster.jpg" controls playsinline preload="auto"></video>
+<div class="row"><button id="again">🔁 Watch again</button><button id="ready" class="on">I'm ready! ▶</button></div></div>
 <div id="tip">Tap the screen to hide / show the buttons</div>
 <div id="ui">
   <div class="row" id="pick"></div>
@@ -26,6 +34,7 @@ label{font-size:13px;color:#cdb38f}
     <button id="spin" class="on">🔄 Spin</button>
     <button id="cross">➕ Center mark</button>
     <button id="full">⛶ Full screen</button>
+    <button id="help">❓ How to</button>
     <button id="go">▶ Start hologram</button>
   </div>
 </div>
@@ -40,7 +49,7 @@ const TILT={footprint:-Math.PI/2.4,trilobite:-Math.PI/2.4,fern:0,ammonite:0};
 let cur=new URLSearchParams(location.search).get('k');if(!F[cur])cur='ammonite';
 const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.outputColorSpace=THREE.SRGBColorSpace;
 document.body.prepend(R.domElement);
-const scene=new THREE.Scene();scene.background=new THREE.Color(0);
+const scene=new THREE.Scene();scene.background=null;R.autoClear=false;
 scene.add(new THREE.HemisphereLight(0xffffff,0x443322,2.2));
 const d1=new THREE.DirectionalLight(0xffffff,2.2);d1.position.set(2,3,2);scene.add(d1);
 const d2=new THREE.DirectionalLight(0xffeedd,1.2);d2.position.set(-2,1,-2);scene.add(d2);
@@ -70,6 +79,12 @@ $('go').onclick=e=>{e.stopPropagation();$('full').onclick();ui.classList.add('hi
 R.domElement.addEventListener('click',()=>{ui.classList.toggle('hide');tip.classList.toggle('hide')});
 try{if(localStorage.getItem('holo-sz'))size=+localStorage.getItem('holo-sz')}catch(e){}
 $('sz').value=size;$('sz').addEventListener('change',()=>{try{localStorage.setItem('holo-sz',size)}catch(e){}});
+const intro=$('intro'),hv=$('hv');
+const showIntro=()=>{intro.classList.remove('hide');hv.currentTime=0;hv.play().catch(()=>{})};
+$('ready').onclick=()=>{hv.pause();intro.classList.add('hide')};
+$('again').onclick=()=>{hv.currentTime=0;hv.play().catch(()=>{})};
+$('help').onclick=e=>{e.stopPropagation();showIntro()};
+hv.play().catch(()=>{});
 // cross mark
 const markC=document.createElement('canvas');
 function frame(t){
@@ -86,10 +101,10 @@ function frame(t){
     [cx-g-v, cy-v/2,      Math.PI/2]     // left slot
   ];
   slots.forEach(([x,y,roll],i)=>{
-    const cam=cams[i],a=i*Math.PI/2,dist=2.05;
+    const cam=cams[i],a=i*Math.PI/2,dist=2.3;
     cam.position.set(Math.sin(a)*dist,0.25,Math.cos(a)*dist);cam.up.set(0,1,0);cam.lookAt(0,0,0);cam.rotateZ(roll);
     cam.aspect=1;cam.updateProjectionMatrix();
-    const vy=H-(y+v);R.setViewport(x,vy,v,v);R.setScissor(x,vy,v,v);R.render(scene,cam);
+    const vy=H-(y+v);R.setViewport(x,vy,v,v);R.setScissor(x,vy,v,v);R.clearDepth();R.render(scene,cam);
   });
   R.setScissorTest(false);
   if(cross){R.setScissorTest(true);const c=new THREE.Color(0x553311);R.setClearColor(c);R.setScissor(cx-1,cy-12,2,24);R.clear();R.setScissor(cx-12,cy-1,24,2);R.clear();R.setClearColor(0);R.setScissorTest(false)}
