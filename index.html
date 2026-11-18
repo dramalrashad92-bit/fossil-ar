@@ -33,7 +33,7 @@ if(F[k]){
   </model-viewer>
   <button class="btn" id="arGo">📱 See it on your desk</button>
   ${isAnd?`<div><a class="btn" style="background:#6b4a2b;font-size:15px;padding:10px 18px" href="${intent}">Not working? Try way 2</a></div>`:''}
-  <p id="dbg" style="font-size:12px;color:#e8c99a;margin:6px"></p><p class="small" id="msg">Point the camera at your desk or the floor and move the phone slowly until the fossil appears.</p>
+  <p id="dbg" style="display:none"></p><p class="small" id="msg">Point the camera at your desk or the floor and move the phone slowly until the fossil appears.</p>
   <div id="help" style="display:none;background:#5a1f12;margin:10px;padding:12px;border-radius:12px;font-size:15px">⚠️ AR could not start on this phone.<br>1) Install or update <b>Google Play Services for AR</b>:<br><a class="btn" style="font-size:15px;padding:10px 18px" href="https://play.google.com/store/apps/details?id=com.google.ar.core">Open Play Store</a><br>2) Open this page in <b>Chrome</b> (not inside another app) and try again.</div>
   <a href="./" style="color:#f1d3a7">⬅ All fossils</a><div style="height:20px"></div>`;
   const mv=document.getElementById('mv'),help=()=>document.getElementById('help').style.display='block';
