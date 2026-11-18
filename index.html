@@ -17,6 +17,7 @@ model-viewer{width:100%;height:58vh;background:radial-gradient(#4a3420,#1d140b)}
 <script>
 const F={ammonite:"Ammonite",trilobite:"Trilobite",footprint:"Dinosaur Footprint",amber:"Insect in Amber",shark:"Shark Tooth",fern:"Fern Leaf Print",mammoth:"Mammoth Tooth",whale:"Ancient Whale Skull"};
 const IC={ammonite:"🐚",trilobite:"🪲",footprint:"🦶",amber:"🟠",shark:"🦈",fern:"🌿",mammoth:"🦣",whale:"🐋"};
+const OR={trilobite:'0deg 40deg auto',footprint:'0deg 40deg auto',whale:'70deg 75deg auto'};
 const k=new URLSearchParams(location.search).get('k');const app=document.getElementById('app');
 const base=location.href.replace(/[?#].*$/,'').replace(/index\.html$/,'');
 if(F[k]){
@@ -26,7 +27,7 @@ if(F[k]){
   const isAnd=/Android/i.test(navigator.userAgent);
   document.title=F[k]+' · AR';
   app.innerHTML=`<header><h1>${IC[k]} ${F[k]}</h1><p>Fossil Evidence Museum</p></header>
-  <model-viewer src="models/${k}.glb" alt="${F[k]}" camera-controls auto-rotate touch-action="pan-y" shadow-intensity="1" exposure="1.1" ar ar-modes="scene-viewer quick-look webxr" ar-scale="fixed" ar-placement="floor">
+  <model-viewer src="models/${k}.glb" alt="${F[k]}" ${OR[k]?`camera-orbit="${OR[k]}"`:''} rotation-per-second="18deg" camera-controls auto-rotate touch-action="pan-y" shadow-intensity="1" exposure="1.1" ar ar-modes="scene-viewer quick-look webxr" ar-scale="fixed" ar-placement="floor">
    ${isAnd?'<span slot="ar-button"></span>':'<button slot="ar-button" class="btn" style="position:absolute;left:50%;bottom:14px;transform:translateX(-50%)">📱 See it on your desk</button>'}
   </model-viewer>
   ${isAnd?`<a class="btn" href="${intent}">📱 See it on your desk</a>`:''}
