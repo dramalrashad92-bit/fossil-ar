@@ -35,10 +35,13 @@ if(F[k]){
   ${isAnd?`<div><a class="btn" style="background:#6b4a2b;font-size:15px;padding:10px 18px" href="${intent}">Not working? Try way 2</a></div>`:''}
   <p class="small" id="msg">Point the camera at your desk or the floor and move the phone slowly until the fossil appears.</p>
   <div id="help" style="display:none;background:#5a1f12;margin:10px;padding:12px;border-radius:12px;font-size:15px">⚠️ AR could not start on this phone.<br>1) Install or update <b>Google Play Services for AR</b>:<br><a class="btn" style="font-size:15px;padding:10px 18px" href="https://play.google.com/store/apps/details?id=com.google.ar.core">Open Play Store</a><br>2) Open this page in <b>Chrome</b> (not inside another app) and try again.</div>
-  <a href="./" style="color:#f1d3a7">⬅ All fossils</a><div style="height:20px"></div>`;
+  <a href="./" style="color:#f1d3a7">⬅ All fossils</a><p id="dbg" style="font-size:11px;color:#9c8466;margin:14px"></p><div style="height:20px"></div>`;
   const mv=document.getElementById('mv'),help=()=>document.getElementById('help').style.display='block';
-  document.getElementById('arGo').onclick=async()=>{await customElements.whenDefined('model-viewer');if(mv.canActivateAR){mv.activateAR()}else{help()}};
-  mv.addEventListener('ar-status',e=>{if(e.detail.status==='failed')help()});
+  const dbg=t=>{document.getElementById('dbg').textContent+=t+' · '};
+  let st='';
+  document.getElementById('arGo').onclick=async()=>{await customElements.whenDefined('model-viewer');dbg('AR:'+mv.canActivateAR);if(mv.canActivateAR){st='';mv.activateAR();setTimeout(()=>{if(!st||st==='not-presenting'){dbg('no-start');help()}},4000)}else{help()}};
+  mv.addEventListener('ar-status',e=>{st=e.detail.status;dbg(st);if(st==='failed')help()});
+  customElements.whenDefined('model-viewer').then(()=>setTimeout(()=>dbg('ready:'+mv.canActivateAR+(navigator.xr?' xr':' noxr')),1500));
 }else{
   app.innerHTML=`<header><h1>🦴 Fossil Evidence Museum · AR</h1><p>Choose a fossil and see it on your desk!</p></header>
   <div class="grid">${Object.keys(F).map(x=>`<a href="?k=${x}">${IC[x]}<br>${F[x]}</a>`).join('')}</div>`;
